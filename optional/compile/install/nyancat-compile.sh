@@ -4,7 +4,7 @@ DEPENDENCY_PACKAGES=(
   clang make git binutils
 )
 
-for DEPENDENCY_PACKAGES in ${DEPENDENCY_PACKAGE[@]}; do
+for DEPENDENCY_PACKAGE in "${DEPENDENCY_PACKAGES[@]}"; do
   pkg i -y ${DEPENDENCY_PACKAGE}
 done
 

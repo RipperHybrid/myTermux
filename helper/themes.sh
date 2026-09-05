@@ -10,6 +10,9 @@ ZSH_CUSTOM_THEMES=(
   rounded-custom.zsh-theme
   rounded.zsh-theme
   simple.zsh-theme
+  pure.zsh-theme
+  powerline.zsh-theme
+  status.zsh-theme
 )
 
 function zshTheme() {
@@ -40,8 +43,6 @@ function zshTheme() {
 
   done
 
-  echo ""
-
 }
 
 function installZshTheme() {
@@ -54,7 +55,7 @@ function installZshTheme() {
 
   for ZSH_CUSTOM_THEME in "${ZSH_CUSTOM_THEMES[@]}"; do
 
-    start_animation "       Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${ZSH_CUSTOM_THEME}${COLOR_WARNING}'${COLOR_BASED} ..."
+    start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${ZSH_CUSTOM_THEME}${COLOR_WARNING}'${COLOR_BASED} ..."
     sleep 2s
     cp $(pwd)/${PATHDIR}/${ZSH_CUSTOM_THEME} $HOME/${PATHDIR}/${ZSH_CUSTOM_THEME}
 

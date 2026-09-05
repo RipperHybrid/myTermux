@@ -12,6 +12,12 @@ done
 
 function fetchMusic() {
 
+  if ! command -v mpc >/dev/null 2>&1; then
+    stat "ERROR" "Danger" "Can't fetch music, command '${COLOR_DANGER}mpc${COLOR_BASED}' not found. 
+            Make sure you installed '${COLOR_SUCCESS}mpd${COLOR_BASED}' and '${COLOR_SUCCESS}mpc${COLOR_BASED}' with '${COLOR_WARNING}pkg install mpd mpc${COLOR_BASED}'"
+    return 1
+  fi
+
   MPD_HOST=127.0.0.1 # or localhost
   MPD_PORT=8000 # Depend your MPD configuration
   #MPC_CONNECT_MPD=$(mpc --host=${MPD_HOST} --port=${MPD_PORT} &> /dev/null)
@@ -33,59 +39,34 @@ function fetchMusic() {
 
 function fetchStorage() {
 
-  MOUNTED_ON="/storage/emulated"
-  GREP_ONE_ROW=$(df -h | grep ${MOUNTED_ON})
+  GREP_ONE_ROW=""
+  if df -h /storage/emulated/0 >/dev/null 2>&1; then
+    GREP_ONE_ROW=$(df -h /storage/emulated/0 | tail -n 1)
+  elif df -h /data >/dev/null 2>&1; then
+    GREP_ONE_ROW=$(df -h /data | tail -n 1)
+  fi
+  if [[ -z "${GREP_ONE_ROW}" ]]; then
+    GREP_ONE_ROW=$(df -h | grep -m1 -vE '^(Filesystem|tmpfs|devtmpfs|udev)')
+  fi
   SIZE=$(echo ${GREP_ONE_ROW} | awk '{print $2}')
   USED=$(echo ${GREP_ONE_ROW} | awk '{print $3}')
   AVAIL=$(echo ${GREP_ONE_ROW} | awk '{print $4}')
-  USE=$(echo ${GREP_ONE_ROW}} | awk '{print $5}' | sed "s/%//g")
+  USE=$(echo ${GREP_ONE_ROW} | awk '{print $5}' | sed "s/%//g")
   MOUNTED=$(echo ${GREP_ONE_ROW} | awk '{print $6}')
   ICON=""
 
   function execute() {
 
-    if [ ${USE} -ge 0 ] && [ ${USE} -le 10 ]; then
+    if [ ${USE} -ge 0 ] && [ ${USE} -le 50 ]; then
 
       echo -e "${COLOR_SUCCESS}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
 
-    elif [ ${USE} -ge 11 ] && [ ${USE} -le 20 ]; then
-
-      echo -e "${COLOR_SUCCESS}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 21 ] && [ ${USE} -le 30 ]; then
-
-      echo -e "${COLOR_SUCCESS}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 31 ] && [ ${USE} -le 40 ]; then
-
-      echo -e "${COLOR_SUCCESS}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 41 ] && [ ${USE} -le 50 ]; then
-
-      echo -e "${COLOR_SUCCESS}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 51 ] && [ ${USE} -le 60 ]; then
+    elif [ ${USE} -ge 51 ] && [ ${USE} -le 80 ]; then
 
       echo -e "${COLOR_WARNING}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
 
-    elif [ ${USE} -ge 61 ] && [ ${USE} -le 70 ]; then
+    elif [ ${USE} -ge 81 ]; then
 
-      echo -e "${COLOR_WARNING}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 71 ] && [ ${USE} -le 80 ]; then
-
-      echo -e "${COLOR_WARNING}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 81 ] && [ ${USE} -le 90 ]; then
-
-      echo -e "${COLOR_DANGER}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} -ge 91 ] && [ ${USE} -le 99 ]; then
-
-      echo -e "${COLOR_DANGER}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
-
-    elif [ ${USE} == 100 ]; then
-    
       echo -e "${COLOR_DANGER}${ICON}${COLOR_BASED} : ${USED}B / ${SIZE}B = ${AVAIL}B (${USE}%)"
 
     fi

@@ -26,10 +26,10 @@ function banner() {
   echo -e "
 \e[3$(( $RANDOM * 6 / 32767 + 1 ))m   ____  __          __  ___         _____  _____ __  __
 \e[9$(( $RANDOM * 6 / 32767 + 1 ))m  / __ \/ /_        /  |/  /_  __   /__  / / ___// / / /
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m / / / / __ \______/ /|_/ / / / /_____/ /  \__ \/ /_/ / 
-\e[9$(( $RANDOM * 6 / 32767 + 1 ))m/ /_/ / / / /_____/ /  / / /_/ /_____/ /_____/ / __  /  
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m\____/_/ /_/     /_/  /_/\__, /     /____/____/_/ /_/   
-\e[9$(( $RANDOM * 6 / 32767 + 1 ))m                        /____/                            
+\e[3$(( $RANDOM * 6 / 32767 + 1 ))m / / / / __ \______/ /|_/ / / / /_____/ /  \__ \/ /_/ /
+\e[9$(( $RANDOM * 6 / 32767 + 1 ))m/ /_/ / / / /_____/ /  / / /_/ /_____/ /_____/ / __  /
+\e[3$(( $RANDOM * 6 / 32767 + 1 ))m\____/_/ /_/     /_/  /_/\__, /     /____/____/_/ /_/
+\e[9$(( $RANDOM * 6 / 32767 + 1 ))m                        /____/
 ${COLOR_BASED}\n"
 
 }
@@ -118,7 +118,7 @@ function selectZshTheme() {
 
         echo ""
 
-        exec $(which zsh)
+        clear && exec zsh
 
         #stat "INFO" "Success" "Please run '${COLOR_SUCCESS}refresh${COLOR_BASED}' or '${COLOR_SUCCESS}source ~/.zshrc${COLOR_BASED}' to apply theme!\n"
 

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+REPOSITORY_URL="https://github.com/RipperHybrid/myTermux.git"
+MYTERMUX_DIR="${HOME}/myTermux"
+UPDATE_DIR="${MYTERMUX_DIR}.update.$$"
+
+function updaterBanner() {
+
+  echo ""
+  echo "    ┌──────────────────────────────────────────────┐"
+  echo "    │              myTermux Updater                │"
+  echo "    └──────────────────────────────────────────────┘"
+  echo ""
+
+}
+
+function main() {
+
+  clear
+
+  chmod +x "${0}" 2> /dev/null
+
+  if ! command -v git > /dev/null 2>&1; then
+    echo -e "    [ ERROR ] > git is not installed. Install it first with:"
+    echo -e "                pkg i -y git"
+    exit 1
+  fi
+
+  if [[ "${MYTERMUX_DIR}" == "${HOME}" || "${MYTERMUX_DIR}" == "/" ]]; then
+    echo -e "    [ ERROR ] > Refusing to touch '${MYTERMUX_DIR}'."
+    exit 1
+  fi
+
+  updaterBanner
+
+  rm -rf -- "${UPDATE_DIR}"
+
+  git clone --depth=1 --progress "${REPOSITORY_URL}" "${UPDATE_DIR}" 2>&1 \
+    | tr '\r' '\n' \
+    | while IFS= read -r line; do
+        clean_line="${line#"${line%%[![:space:]]*}"}"
+        clean_line="${clean_line%"${clean_line##*[![:space:]]}"}"
+        if [[ -n "$clean_line" ]]; then
+          printf '\r\033[2K    [ RUN ] > %s' "$clean_line"
+        fi
+      done
+  CLONE_STATUS="${PIPESTATUS[0]}"
+
+  printf '\r\033[2K'
+
+  if [[ ${CLONE_STATUS} -ne 0 || ! -d "${UPDATE_DIR}" ]]; then
+    rm -rf -- "${UPDATE_DIR}"
+    echo -e "    [ ERROR ] > Clone failed. Check your internet connection and try again."
+    exit 1
+  fi
+
+  echo -e "    [ RUN ] > Replacing the existing '${MYTERMUX_DIR}' folder..."
+  rm -rf -- "${MYTERMUX_DIR}"
+  if ! mv -- "${UPDATE_DIR}" "${MYTERMUX_DIR}"; then
+    echo -e "    [ ERROR ] > Could not install the downloaded release."
+    rm -rf -- "${UPDATE_DIR}"
+    exit 1
+  fi
+
+  echo -e "    [ RESULT ] > Latest release cloned."
+
+  cd "${MYTERMUX_DIR}" || exit 1
+
+  export COLUMNS LINES
+
+  echo -e "    [ RUN ] > Running the installer — answer the prompts as on a fresh install..."
+  echo ""
+
+  if ./install.sh; then
+    cd "${HOME}" 2> /dev/null
+    echo ""
+    echo -e "    ✅ myTermux update finished. Restart Termux to complete."
+    echo ""
+  else
+    cd "${HOME}" 2> /dev/null
+    echo ""
+    echo -e "    ❌ myTermux update was not completed. You can re-run with 'txupdate'."
+    echo ""
+    exit 1
+  fi
+
+}
+
+main

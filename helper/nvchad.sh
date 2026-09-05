@@ -2,35 +2,39 @@
 
 function NvChad() {
 
-  echo -e "\n‏‏‎‏‏‎ ‎ ‎‏‏‎  ‎📦 Installing Neovim Plugins with Packer\n"
+  echo -e "\n    📦 Installing NvChad (Modern Neovim Setup)\n"
 
-  stat "CHECK" "Warning" "'${COLOR_WARNING}NvChad${COLOR_BASED}' Folder"
-  
-  if [ -d $HOME/NvChad ]; then
+  stat "RUN" "Warning" "Cleaning old Neovim files..."
+  rm -rf ~/.config/nvim ~/.local/share/nvim ~/.cache/nvim
 
-    stat "RESULT" "Success" "'${COLOR_SUCCESS}NvChad${COLOR_BASED}' exist"
+  stat "RUN" "Warning" "Cloning starter template..."
 
-    stat "RUN" "Warning" "Move '${COLOR_WARNING}NvChad${COLOR_BASED}' Folder to '${COLOR_WARNING}.config/nvim${COLOR_BASED}' ..."
+  if git clone https://github.com/NvChad/starter ~/.config/nvim --depth 1 &> /dev/null; then
 
-    mv $HOME/NvChad $HOME/.config/nvim
+    stat "RESULT" "Success" "NvChad successfully installed to .config/nvim"
 
-    if [ -d $HOME/.config/nvim ]; then
+    NVIM_LOG="${HOME}/.config/nvim/.lazy-install.log"
+    mkdir -p "${HOME}/.config/nvim"
 
-      stat "RESULT" "Success" "'${COLOR_SUCCESS}NvChad${COLOR_BASED}' success move to '${COLOR_SUCCESS}.config/nvim${COLOR_BASED}'"
+    start_animation "    Installing NvChad plugins ..."
 
-      stat "RUN" "Warning" "Installing '${COLOR_WARNING}NvChad${COLOR_BASED}' ..."
+    if nvim --headless "+Lazy! sync" +qa > "${NVIM_LOG}" 2>&1; then
 
-	  nvim
+      stop_animation 0
+      rm -f "${NVIM_LOG}"
 
     else
 
-      stat "RESULT" "Danger" "'${COLOR_DANGER}NvChad${COLOR_BASED}' failed move to '${COLOR_DANGER}.config/nvim${COLOR_BASED}'"
+      stop_animation 1
+      stat "INFO" "Warning" "Plugin sync failed - last lines of the log:"
+      tail -n 15 "${NVIM_LOG}" | sed 's/^/    /'
+      rm -f "${NVIM_LOG}"
 
     fi
 
   else
 
-    stat "RESULT" "Danger" "'${COLOR_DANGER}NvChad${COLOR_BASED}' No such directory"
+    stat "RESULT" "Danger" "NvChad installation failed."
 
   fi
 

@@ -4,9 +4,9 @@
 #   Bash Spinner : https://github.com/tlatsas/bash-spinner
 #   WhiteSur-GTK-Theme (Line 148-217) : https://github.com/vinceliuice/WhiteSur-gtk-theme/blob/master/lib-core.sh
 
-# Author: xShin
+# Author: xShin, AshBorn
 #
-# Display awesome looping loading 
+# Display awesome looping loading
 #
 # Usage:
 #   1. Source this file on your shell script
@@ -42,7 +42,7 @@ function animation() {
  case $1 in
 
    start )
-    
+
       # let column=$(tput cols)-${#2}-8
       let column=$(echo $COLUMNS)-${#2}-8
 
@@ -69,16 +69,15 @@ function animation() {
      fi
 
      kill ${3} > /dev/null 2>&1
-
-     echo -en "\b${COLOR_DEFAULT}  --> ["
+     wait ${3} 2> /dev/null
 
      if [[ $2 -eq 0 ]]; then
-       echo -en " ${COLOR_GREEN}${OK}${COLOR_DEFAULT} "
+       RESULT=" ${COLOR_GREEN}${OK}${COLOR_DEFAULT} "
      else
-       echo -en " ${COLOR_RED}${NO}${COLOR_DEFAULT} "
+       RESULT=" ${COLOR_RED}${NO}${COLOR_DEFAULT} "
      fi
 
-     echo -e "${COLOR_DEFAULT}]"     
+     echo -e "\r\033[2K${COLOR_DEFAULT}${ANIMATION_MSG}  --> [${RESULT}${COLOR_DEFAULT}]"
 
    ;;
 
@@ -96,7 +95,8 @@ function animation() {
 function start_animation() {
 
   setCursor off
-  animation "start" "${1}" &
+  ANIMATION_MSG="${1}"
+  animation "start" "${ANIMATION_MSG}" &
   animation_pid=${!}
   disown
 
@@ -105,7 +105,7 @@ function start_animation() {
 function stop_animation() {
 
   animation "stop" $1 $animation_pid
-  unset $animation_pid
+  unset animation_pid
   setCursor on
 
 }

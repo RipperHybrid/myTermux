@@ -1,181 +1,167 @@
 <h1 align="center">myTermux</h1>
 
-<p align="center">This is my personal configuration for my favorite Termux</p>
+<p align="center">A personalized, modular, and feature-rich terminal environment for Termux on Android</p>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL-blue.svg"></a>
-  <a href="https://github.com/mayTermux/awesomeshot/releases"><img src="https://img.shields.io/github/release/mayTermux/myTermux.svg"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL-red.svg"></a>
 </p>
 
-## Video Installation
+## 🚀 Quick Installation
 
-> Click this thumbnail below to see video installation
+> **Important:**
+> - Install **Termux from [F-Droid](https://f-droid.org/en/packages/com.termux/)** (the Play Store version is deprecated and unmaintained).
+> - Install **[Termux:API](https://f-droid.org/en/packages/com.termux.api/)** for battery stats, hardware info, and notifications.
 
-[![myTermux Thumbnail](https://user-images.githubusercontent.com/64394320/170211137-554dfd78-8424-4699-876c-7483b45de068.png)](https://www.youtube.com/watch?v=sYkNxK_44Zg "myTermux - Installation")
-
-## Installation Dependecies
-
-> **Attention!**
->
-> - [Termux must be **F-Droid** Version](https://f-droid.org/en/packages/com.termux/) because Termux from Playstore no longer maintained because there are some problems with the Playstore publishing
-> - [Termux:API must be installed](https://f-droid.org/en/packages/com.termux.api/) myTermux use API command from Termux:API like fetch `termux-battery-status`
-
-  <details open>
-  <summary><strong>Update Repository & Upgrade Package</strong></summary>
-
+### 1. Update Packages
+Updates repository mirrors and upgrades existing packages to their newest versions:
 ```bash
-pkg update && pkg upgrade
+pkg update && pkg upgrade -y
 ```
 
-  </details>
-
-  <details>
-  <summary><strong>git & bc</strong></summary>
-
-- Package `git` for cloning or downloading repository
-- Package `bc` for calculate repository size which will be cloning or downloading
-
+### 2. Install Required Setup Dependencies
+Installs `git` (to download the repository) and `bc` (to calculate download/package sizes):
 ```bash
 pkg i -y git bc
 ```
 
-  </details>
-
-## Installation myTermux
-
-  <details open>
-  <summary><strong>Clone or Download This Repository</strong></summary>
-
+### 3. Clone & Run the Installer
+Downloads the setup and starts the interactive configuration menu:
 ```bash
-git clone --depth=1 https://github.com/mayTermux/myTermux.git
-```
-
-  </details>
-
-  <details>
-  <summary><strong>Run Script Installer</strong></summary>
-
-- Move to Folder
-
-```bash
+cd
+git clone --depth=1 https://github.com/RipperHybrid/myTermux.git
 cd myTermux
-```
-
-- export variable `COLUMNS` and `LINES`
-
-> This variable function so that the installer script can read the
-> `column` and `row` widths of Termux Application so that later it
-> matches the output during the installation process.
-
-```bash
 export COLUMNS LINES
-```
-
-- Execute Installer
-
-```bash
 ./install.sh
 ```
 
-![Error](https://user-images.githubusercontent.com/64394320/170210843-a4ee5203-2892-4083-81a8-fe89981cac80.png)
+> 📖 **Step-by-Step Guide:** See **[installation.md](installation.md)** for a full prompt-by-prompt walkthrough.
+>
+> 📱 **Screen Size:** The installer needs at least **101 columns × 39 rows**. If your screen is smaller, an interactive screen resizer will show live dimensions and wait for you to pinch/zoom out.
+>
+> 🔄 **Updating:** Run `txupdate` anytime to fetch the latest release and update in-place.
+>
+> 🗑️ **Uninstalling:** Run `txuninstall` (or `./uninstall.sh`) to cleanly remove myTermux and restore your previous backups.
 
-> If you get error message `Please Zoom Out`.
-> Zoom Out on Termux Application then run again the script
+---
 
-> If the row and column widths of the application are correct,
-> the script will automatically run, like this:
+## ✨ Features
 
-![banner_out](https://user-images.githubusercontent.com/64394320/170211059-9d740d4f-b657-4da5-a319-a3e09af0be3b.png)
+- 🎨 **Colorscheme Manager** — switch between terminal color themes live with `chcolor`
+- 🔤 **Font Manager** — `chfont` lists fonts in `~/.fonts` and previews them live before applying; answering `n` or pressing `Ctrl+C` restores your previous font automatically
+- 💻 **ZSH Theme Manager** — live switcher (`chzsh`) for 12 custom prompt styles (ma, powerline, pure, status, etc.)
+- ✏️ **Custom Prompt Username** — `setuser [name]` sets a custom display name in prompt themes in place of `user@host`
+- ⚡ **Dynamic Fetch Display** — automatically starts with your preferred fetch screen (`neo` / `rxfetch`), remembered each time you run either
+- 🔎 **Interactive Missing-Command Installer** — typing an unknown command provides an interactive menu of matching packages with instant installation
+- 🕐 **History Management** — toggle history recording with `histoff` / `histon`
+- 🔮 **Fish-Style Autosuggestions** — fast inline suggestions as you type; accept with `→` or `Ctrl+F`
+- 📺 **Media Downloader** — `ytdl` CLI wrapper for `yt-dlp` (`ytdl best|mp4|webm|mp3|audio|format <link>`)
+- 📊 **System Diagnostics** — `fetch`, `disk`, and `battery` for storage, power, and hardware info
+- 🛠️ **Management Commands** — `txhelp` (command list), `txupdate` (in-place updater), `txclean` (backup cleaner), `txuninstall` (complete remover)
 
-> Then follow the installation until it's finished
+---
 
-  </details>
+## 📸 Screenshots
 
-## :camera_flash: Screenshots
+See full screenshots, animations, font previews, and colorschemes in **[screenshots.md](screenshots.md)**.
 
-> This screenshot take by [**Awesomeshot**](https://github.com/mayTermux/awesomeshot) and system fetch by [**rxfetch-termux**](https://github.com/mayTermux/rxfetch-termux)
+---
 
-- System Fetch
+## ⌨️ Command Reference
 
-  > rxfetch
+### 🎨 Customization & Management
+| Command | Description |
+| :--- | :--- |
+| `chcolor` | Switch terminal colorschemes live with interactive preview |
+| `chfont` | Switch terminal fonts with live preview before applying |
+| `chzsh` | Change ZSH prompt themes live |
+| `setuser [name]` | Set custom prompt username in themes (e.g. `setuser Neo`) |
+| `txhelp` | Print the full interactive list of all available commands |
+| `txupdate` | Clone latest release and update myTermux in-place |
+| `txclean` | Clean all timestamped backups (`~/.<file>.<date>.backup`) |
+| `txuninstall` | Run the uninstaller to remove myTermux and restore backups |
+| `fontused` | View currently active font name |
+| `colorused` | View currently active colorscheme |
+| `zshused` | View currently active ZSH theme |
+| `fetchused` | View current default fetch tool (`neo` or `rxfetch`) |
 
-  ![rxfetch](https://user-images.githubusercontent.com/64394320/170211137-554dfd78-8424-4699-876c-7483b45de068.png)
+### ⚡ System Information & Diagnostics
+| Command | Description |
+| :--- | :--- |
+| `rxfetch` | Run ASCII system fetch (sets default startup to rxfetch) |
+| `neo` / `neofetch` | Run Neofetch system info (sets default startup to neofetch) |
+| `neodebug [opt]` | Run neofetch logo debugger |
+| `disk` | Display disk and storage partition usage |
+| `battery` | Display real-time battery status via Termux:API |
+| `fetch` | Custom system fetch (music, battery, or storage) |
 
-  > neofetch
+### 🔒 History Management
+| Command | Description |
+| :--- | :--- |
+| `histoff` | Disable history recording and wipe existing history files |
+| `histon` | Re-enable shell history tracking |
 
-  ![neofetch_out](https://user-images.githubusercontent.com/64394320/170211168-9e44dab1-7047-4f12-985c-3608b93ee033.png)
+### 📦 Package & Everyday Shortcuts
+| Command | Description |
+| :--- | :--- |
+| `pacupg` / `pacupd` | `pkg upgrade` / `pkg update` shortcuts |
+| `pacupgupd` | Update and upgrade packages in one command (`pkg update && pkg upgrade`) |
+| `refresh` | Reload `~/.zshrc` without restarting the session |
+| `unsource` | Restart login shell session |
+| `c` / `q` | `clear` / `exit` terminal shortcuts |
+| `preview <file>` | Fuzzy find (`fzf`) with live syntax-highlighted preview (`bat`) |
+| `ls` / `la` / `lt` / `lta` | Modern directory listings and tree views powered by `eza` |
+| `bat` / `cat <file>` | Syntax-highlighted file viewing |
+| `sd` / `dl` / `ms` / `ss` / `ds` | Quick jumps to `/sdcard`, `Download`, `Movies`, `Screenshots`, `Documents` |
+| `pf` / `archives` | Jump to `$PREFIX` / apt package cache archives |
+| `largefile` | Find and list the 20 largest files in current directory |
 
-- Colorscheme (Theme)
+### 🛠️ CLI Tools, Network & Media
+| Command | Description |
+| :--- | :--- |
+| `ytdl <mode> <url>` | Media downloader (`best`, `mp4`, `webm`, `mp3`, `audio`, `format`) |
+| `gitssh` | Generate SSH key and configure Git authentication |
+| `ipconfig` | Quick network interfaces and IP address info |
+| `macfinder [mac]` | Search and identify MAC address vendor details |
+| `repocek` | JavaScript repository dependency checker |
+| `convi <in> <out>` | Convert and compress videos using ffmpeg (`-crf 25`) |
+| `myip` / `myipwifi` / `myipvpn` | Show public and local IP addresses by interface |
 
-  > Change colorscheme or theme with command:
+### 🎵 Music Player (MPD & NCMPCPP)
+| Command | Description |
+| :--- | :--- |
+| `m` / `music` | Interactive terminal music player wrapper |
+| `n` / `ncmpcpp` | Launch NCMPCPP music player client |
+| `mkill` | Terminate background MPD music daemon |
 
-  ```bash
-  chcolor
-  ```
+### 🎮 Terminal Color Toys
+| Command | Description |
+| :--- | :--- |
+| `pipes` / `pipes1` / `pipes2` / `pipesx` | Animated terminal pipe screensavers |
+| `pacman` | ASCII Pacman animation |
+| `rains` | Matrix digital rain effect |
+| `dna` | Animated rotating DNA strand |
+| `spacey` | ASCII flying starfield effect |
+| `ghost` / `jfetch` | Fun ASCII visualizers |
+| `colortest` / `colorbars` / `bloks` / `colorview` | Terminal 256-color palette testers |
 
-  ![chcolor_out](https://user-images.githubusercontent.com/64394320/170211188-69f6317f-31e5-4feb-8422-3b0912ec3f8d.png)
-
-  <details>
-  <summary>Show Preview</summary>
-
-  ![colorscheme](https://i.ibb.co/4Vjdk89/out2.png)
-
-  </details>
-
-- Fonts
-
-  > Change font used with command:
-
-  ```bash
-  chfont
-  ```
-
-  ![chfont_out](https://user-images.githubusercontent.com/64394320/170211200-74ffac55-3181-4b43-9faa-a076ba847a70.png)
-
-- ZSH Theme
-
-  > Change ZSH Theme with command:
-
-  ```bash
-  chzsh
-  ```
-
-  ![zsh_out](https://user-images.githubusercontent.com/64394320/170211230-059d59be-376b-440c-9fb9-ea3750c983b9.png)
-
-- [NVIM] - Text Editor
-
-  ![nvim_out](https://user-images.githubusercontent.com/64394320/170211252-e11d41cf-7674-40e5-b1f8-11ac3320a83f.png)
-
-  <details>
-  <summary>Show Theme</summary>
-
-  ![NvChad Theme](https://i.ibb.co/6DqyPqT/final-text-editor.png)
-
-  </details>
-
-- [NCMPCPP] - Music Player
-
-  ![music_out](https://user-images.githubusercontent.com/64394320/170211279-a26d0f0e-1cf8-4b8b-ae21-8a1a79515574.png)
-
-- [COLORTOYS] - Pipes
-
-  ![pipes](https://user-images.githubusercontent.com/66439853/178114136-25a80169-2413-4a92-ac4b-e0df649da5f2.png)
-
-- [COLORTOYS] - Panes, Bar, Bloks
-
-  ![panes-bar-bloks](https://user-images.githubusercontent.com/66439853/178114094-1e1a9956-46f9-446b-a527-86b61e9c77e0.png)
-
-- [NYANCAT]
-
-  ![nyancat_out](https://user-images.githubusercontent.com/64394320/170211265-40e42967-1aee-40ad-9a39-11e9a45139ee.png)
+### ⚙️ Quick Configuration Editors (Neovim)
+| Command | Description |
+| :--- | :--- |
+| `aliasconf` | Edit aliases in `~/.aliases` |
+| `zshconf` | Edit ZSH configuration in `~/.zshrc` |
+| `termconf` | Edit Termux properties in `~/.termux/termux.properties` |
+| `neoconf` / `rxconf` | Edit Neofetch / rxfetch configuration files |
+| `mpdconf` / `ncmconf` | Edit MPD / NCMPCPP music configurations |
+| `nviminit` | Edit Neovim main configuration (`~/.config/nvim/init.lua`) |
 
 ## Credits
 
+- [mayTermux](https://github.com/mayTermux) Original myTermux repository this fork is based on
 - [siduck](https://github.com/siduck) Neovim Setup (NvChad), Colorscheme (onedark-siduck)
 - [owl4ce](https://github.com/owl4ce) First time getting to know dotfiles
 - [adi1090x](https://github.com/adi1090x) Termux Setup
 - [bandithijo](https://github.com/bandithijo) Awesome screenshot like MacOS using imagemagick script
-- [lwotcynna](https://github.com/lwotcynna) Contibutor
+- [lwotcynna](https://github.com/lwotcynna) Contributor
 - [nekonako](https://github.com/nekonako) Colorscheme nekonako-djancoeg, nekonako-hue, nekonako-om-mar
 - [Dotfiles Indonesia](https://t.me/dotfiles_id)
 - [Vim Indonesia](https://t.me/VimID)

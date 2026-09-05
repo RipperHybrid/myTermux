@@ -26,9 +26,9 @@ sigwinch() {
 do_exit() {
   echo -ne "\e[${TERM_HEIGHT};1H\e[0K"
 
-  # Show cursor and echo stdin
+  # Show cursor and restore terminal state
   echo -ne "\e[?25h"
-  stty echo
+  stty sane 2>/dev/null || stty echo
   exit 0
   }
 

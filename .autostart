@@ -24,9 +24,20 @@ echo -e "\e[4 q"
 
 #fi
 
-#neo
-#clear
-rxfetch
+# Display fetch screen based on last used preference (neo / rxfetch)
+FETCH_USED="$(cat "${HOME}/.config/mytermux/fetch/used.log" 2>/dev/null)"
+case "$FETCH_USED" in
+  neo|neofetch)
+    command -v neofetch >/dev/null 2>&1 && neofetch || rxfetch
+    ;;
+  *)
+    if [[ -x "${HOME}/.local/bin/rxfetch" ]]; then
+      "${HOME}/.local/bin/rxfetch"
+    elif command -v neofetch >/dev/null 2>&1; then
+      neofetch
+    fi
+    ;;
+esac
 
 # SSH for Git & GitHub!
 #SSH_ENV="${HOME}/.ssh/agent-environment"

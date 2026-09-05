@@ -31,7 +31,7 @@ function handle_ctrl_c() {
 # ytdl function
 function ytdl() {
 
-  syntax="youtube-dl"
+  syntax="yt-dlp"
   paramcode="-F"
   paramdowncode="-f"
   best="bestvideo+bestaudio --merge-output-format mp4"

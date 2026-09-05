@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-VERSION="0.6.2"
-BUILD_DATE="03 April 2022"
-AUTHOR="xShin"
+VERSION="0.7.0"
+BUILD_DATE="04 September 2026"
+AUTHOR="xShin, AshBorn"
 
 function banner() {
 
@@ -17,8 +17,8 @@ function banner() {
     ┃                (____/                                          ┃
     ┃                                                                ┃
     ┃                  🚀 Version    : ${VERSION}                         ┃
-    ┃                  📅 Build Date : ${BUILD_DATE}                 ┃
-    ┃                  ⚙️ Author     : ${AUTHOR}                          ┃
+    ┃                  📅 Build Date : ${BUILD_DATE}             ┃
+    ┃                  ⚙️ Author     : ${AUTHOR}                 ┃
     ┃                                                                ┃
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
   "

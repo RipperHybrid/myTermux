@@ -4,28 +4,74 @@ function switchCase() {
 
   setCursor on
 
-  read -p "    ${1} ${2}? [Y/n] " SWITCH_CASE
+  local ACTION="${1}"
+  local NAME="${2}"
+  local DESCRIPTION="${3}"
+  local YES_CMD="${4}"
+  local NO_CMD="${5:-}"
+  local REQUIRED="${6:-}"
+  local CONFIRMED_SKIP=0
 
-  case "$SWITCH_CASE" in
+  echo ""
+  if [[ -n "${DESCRIPTION}" ]]; then
+    stat "INFO" "Info" "${DESCRIPTION}"
+  fi
+  echo ""
 
-    "" )
-      ${3}
-    ;;
+  while :; do
 
-    y|Y )
-      ${3}
-    ;;
-
-    n|N )
-      stat "ERROR" "Warning" "${COLOR_DANGER}Abort.${COLOR_BASED}"
+    echo -ne "    ${ACTION} ${NAME}? [${COLOR_SUCCESS}Y${COLOR_BASED}/${COLOR_WARNING}n${COLOR_BASED}]${REQUIRED:+ (${COLOR_DANGER}Required${COLOR_BASED})} "
+    if ! read -r SWITCH_CASE; then
+      echo ""
+      stat "ERROR" "Danger" "No answer received. Aborting."
+      setCursor on
       exit 1
-    ;;
+    fi
 
-    * )
-      stat "ERROR" "Warning" "Unknown '${COLOR_DANGER}${SWITCH_CASE}${COLOR_BASED}'"
-      switchCase ${1} ${2} ${3}
-    ;;
+    case "$SWITCH_CASE" in
 
-  esac
+      y | Y )
+        ${YES_CMD}
+        break
+      ;;
+
+      n | N )
+        if [[ -n "${REQUIRED}" ]]; then
+          if [[ "${CONFIRMED_SKIP}" -eq 1 ]]; then
+            echo ""
+            stat "ERROR" "Danger" "${NAME} is required. Restart the installer and answer 'y'."
+            setCursor on
+            exit 1
+          fi
+          CONFIRMED_SKIP=1
+          echo ""
+          stat "INFO" "Warning" "${NAME} is required. Press '${COLOR_SUCCESS}y${COLOR_BASED}' to continue, or '${COLOR_DANGER}n${COLOR_BASED}' again to abort the installer."
+          echo ""
+          continue
+        fi
+        stat "INFO" "Warning" "${COLOR_WARNING}Skipping ${NAME}...${COLOR_BASED}"
+        if [[ -n "${NO_CMD}" ]]; then
+          ${NO_CMD}
+        fi
+        break
+      ;;
+
+      "" )
+        echo ""
+        stat "INFO" "Warning" "No answer given — type '${COLOR_WARNING}y${COLOR_BASED}' to accept or '${COLOR_WARNING}n${COLOR_BASED}' to skip."
+        echo ""
+      ;;
+
+      * )
+        echo ""
+        stat "ERROR" "Warning" "Unknown '${COLOR_DANGER}${SWITCH_CASE}${COLOR_BASED}' — type 'y' or 'n'."
+        echo ""
+      ;;
+
+    esac
+
+  done
+
+  setCursor on
 
 }

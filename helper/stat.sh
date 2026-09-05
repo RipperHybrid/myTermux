@@ -2,18 +2,28 @@
 
 function stat() {
 
-  if [ "${2}" == "Success" ]; then
+  case "${2}" in
 
-    echo -e "    [ ${COLOR_SUCCESS}${1}${COLOR_BASED} ] > ${3}"
+    "Info" )
+      echo -e "    [ ${COLOR_SKY}${1}${COLOR_BASED} ] > ${3}"
+    ;;
 
-  elif [ "${2}" == "Warning" ]; then
+    "Success" )
+      echo -e "    [ ${COLOR_SUCCESS}${1}${COLOR_BASED} ] > ${3}"
+    ;;
 
-    echo -e "    [ ${COLOR_WARNING}${1}${COLOR_BASED} ] > ${3}"
+    "Warning" )
+      echo -e "    [ ${COLOR_WARNING}${1}${COLOR_BASED} ] > ${3}"
+    ;;
 
-  elif [ "${2}" == "Danger" ]; then
+    "Danger" )
+      echo -e "    [ ${COLOR_DANGER}${1}${COLOR_BASED} ] > ${3}"
+    ;;
 
-    echo -e "    [ ${COLOR_DANGER}${1}${COLOR_BASED} ] > ${3}"
+    * )
+      echo -e "    [ ${COLOR_BASED}${1}${COLOR_BASED} ] > ${3}"
+    ;;
 
-  fi
-  
+  esac
+
 }

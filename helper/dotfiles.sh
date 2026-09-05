@@ -39,11 +39,11 @@ function dotFiles() {
 
   done
 
-  echo ""
-
 }
 
 function backupDotFiles() {
+
+  echo -e ""
 
   echo -e "‏‏‎‏‏‎ ‎ ‎‏‏‎  ‎📦 Backup Dotfiles"
   echo -e ""
@@ -51,32 +51,27 @@ function backupDotFiles() {
 
   for BACKUP_DOTFILE in "${BACKUP_DOTFILES[@]}"; do
 
-    start_animation "       Backup ${COLOR_WARNING}'${COLOR_SUCCESS}${BACKUP_DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
+    start_animation "    Backup ${COLOR_WARNING}'${COLOR_SUCCESS}${BACKUP_DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
     sleep 1s
 
     if [[ -d "$HOME/$BACKUP_DOTFILE" || -f "$HOME/$BACKUP_DOTFILE" ]]; then
 
-      mv ${HOME}/${BACKUP_DOTFILE} ${HOME}/${BACKUP_DOTFILE}.$(date +%Y.%m.%d-%H.%M.%S).backup
+      BACKUP_FILE="${HOME}/${BACKUP_DOTFILE}.$(date +%Y.%m.%d-%H.%M.%S).backup"
+      mv "${HOME}/${BACKUP_DOTFILE}" "${BACKUP_FILE}"
 
-      if [[ -d ${HOME}/${BACKUP_DOTFILE}.$(date +%Y.%m.%d-%H.%M.%S).backup || -f ${HOME}/${BACKUP_DOTFILE}.$(date +%Y.%m.%d-%H.%M.%S).backup ]]; then
-
-        stop_animation $? || exit 1
-
+      if [[ -d "${BACKUP_FILE}" || -f "${BACKUP_FILE}" ]]; then
+        stop_animation 0
       else
-
-        stop_animation $?
-
+        stop_animation 1
       fi
 
     else
 
-      stop_animation $?
+      stop_animation 0
 
     fi
 
   done
-
-  echo -e ""
 
 }
 
@@ -90,8 +85,15 @@ function installDotFiles() {
 
     if [ "${DOTFILE}" == ".termux" ]; then
 
-      start_animation "       Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
-      cp -R $DOTFILE $HOME
+      start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
+      mkdir -p "${HOME}/.termux"
+      cp -R $DOTFILE/* "${HOME}/.termux/" 2>/dev/null
+
+      local LATEST_TERMUX_BACKUP
+      LATEST_TERMUX_BACKUP=$(ls -d -t "${HOME}"/.termux.*.backup 2>/dev/null | head -1)
+      if [[ -n "${LATEST_TERMUX_BACKUP}" && -f "${LATEST_TERMUX_BACKUP}/termux.properties" && ! -f "${HOME}/.termux/termux.properties" ]]; then
+        cp -p "${LATEST_TERMUX_BACKUP}/termux.properties" "${HOME}/.termux/termux.properties"
+      fi
 
       if [[ -d $HOME/$DOTFILE || -f $HOME/$DOTFILE ]]; then
 
@@ -106,7 +108,7 @@ function installDotFiles() {
 
     else
 
-      start_animation "       Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
+      start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${DOTFILE}${COLOR_WARNING}'${COLOR_BASED} ..."
       cp -R $DOTFILE $HOME
 
       if [[ -d $HOME/$DOTFILE || -f $HOME/$DOTFILE ]]; then
@@ -123,8 +125,15 @@ function installDotFiles() {
 
   done
 
-  echo -e ""
+  chmod +x "${HOME}/.local/bin/mytermux-update" 2> /dev/null
 
   setCursor on
-  
+
+}
+
+function installDotFilesWithBackup() {
+
+  backupDotFiles
+  installDotFiles
+
 }

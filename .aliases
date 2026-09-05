@@ -10,8 +10,9 @@ alias chzsh="~/.scripts/zsh/changetheme.sh"
 alias fontused="cat ~/.config/mytermux/fonts/used.log"
 alias colorused="cat ~/.config/mytermux/colorscheme/used.log"
 alias zshused="cat ~/.config/mytermux/zsh/used.log"
+alias fetchused="cat ~/.config/mytermux/fetch/used.log 2>/dev/null || echo rxfetch"
 
-#System    
+#System
 alias q="exit"
 alias c="clear"
 alias sd="cd /sdcard"
@@ -22,10 +23,15 @@ alias pacupg="pkg upgrade"
 alias pacupd="pkg update"
 alias pacupgupd="pkg update && pkg upgrade"
 
+alias py="python"
+alias py3="python3"
+alias nr="npm run"
+alias ni="npm install"
+
 #Convert Video
 alias convi="ffmpeg -i $1 -c:v libx264 -crf 25 $2"
 
-#Ping    
+#Ping
 alias pg="ping google.com"
 
 #MyIP (Local) Pre
@@ -35,7 +41,7 @@ alias myiphotspot="~/.scripts/system/ip.sh hotspot"
 alias myipvpn="~/.scripts/system/ip.sh vpn"
 alias myipall="~/.scripts/system/ip.sh all"
 
-#Music    
+#Music
 alias n="ncmpcpp"
 alias mkill="mpd --kill"
 alias m="music"
@@ -79,8 +85,25 @@ alias ds="cd /sdcard/Documents"
 alias largefile="du -h -x -s -- * | sort -r -h | head -20"
 
 #System Information
-#alias neo="bash ~/.config/neofetch/debug-logo.sh --randomsmall"
-alias neo="neofetch"
+neo() {
+  mkdir -p "${HOME}/.config/mytermux/fetch"
+  echo "neo" > "${HOME}/.config/mytermux/fetch/used.log"
+  neofetch "$@"
+}
+neofetch() {
+  mkdir -p "${HOME}/.config/mytermux/fetch"
+  echo "neo" > "${HOME}/.config/mytermux/fetch/used.log"
+  command neofetch "$@"
+}
+rxfetch() {
+  mkdir -p "${HOME}/.config/mytermux/fetch"
+  echo "rxfetch" > "${HOME}/.config/mytermux/fetch/used.log"
+  if [[ -x "${HOME}/.local/bin/rxfetch" ]]; then
+    "${HOME}/.local/bin/rxfetch" "$@"
+  else
+    command neofetch "$@"
+  fi
+}
 alias neodebug="bash ~/.config/neofetch/debug-logo.sh $1"
 alias disk="bash ~/.scripts/system/fetch.sh storage"
 alias battery="bash ~/.scripts/system/fetch.sh battery"
@@ -95,16 +118,13 @@ alias cat="bat --theme OneHalfDark -p $@"
 alias prot="cd $PREFIX/var/lib/proot-distro"
 alias protlogin="proot-distro login $1"
 
-#Magick
-alias listfont="magick convert -list font | grep -iE 'font:.*'"
-
 ## Configuration
 
 #mpd
 alias mpdconf="nvim ~/.config/mpd/mpd.conf"
 alias mpconf="nvim /data/data/com.termux/files/usr/etc/mpd.conf"
 
-#ncmpcpp    
+#ncmpcpp
 alias ncmconf="nvim ~/.config/ncmpcpp/config"
 
 #neovim
@@ -120,14 +140,11 @@ alias nvimcore="nvim ~/.config/nvim/lua/core/init.lua"
 #zsh
 alias zshconf="nvim ~/.zshrc"
 
-#neofetch    
+#neofetch
 alias neoconf="nvim ~/.config/neofetch/config.conf"
 alias rxconf="nvim ~/.local/bin/rxfetch"
-alias neoscript="nvim ~/.config/neofetch/script.sh"
 alias fetch="bash ~/.scripts/system/fetch.sh $@"
 alias fetchconf="nvim ~/.scripts/system/fetch.sh"
-
-alias awesomeconf="nvim ~/.config/awesomeshot/awesomeshot.conf"
 
 #git
 alias gitgraph="git log --all --decorate --oneline --graph"
@@ -147,11 +164,11 @@ alias refresh="source $HOME/.zshrc"
 alias unsource="exec $SHELL -l"
 
 #PID Login
-alias loginconf="nvim ~/.scripts/login.sh"
+alias loginconf="nvim ~/.scripts/system/login.sh"
 alias exit="if [ -f ~/.scripts/pid/login ]; then rm ~/.scripts/pid/login; fi && exit"
 
 #MyIP
-alias myipconf="nvim ~/.scripts/ip.sh"
+alias myipconf="nvim ~/.scripts/system/ip.sh"
 
 #termux-reload
 alias reload="termux-reload-settings"
@@ -174,3 +191,147 @@ alias zshthemeconf="nvim ~/.scripts/zsh/changetheme.sh"
 # Termux:API
 alias scan="termux-media-scan"
 alias open="termux-open"
+
+#History Management
+histoff() {
+  grep -qxF 'export HISTFILE=/dev/null' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' 'export HISTFILE=/dev/null' >> "$HOME/.bashrc"
+
+  rm -f "$HOME/.zsh_history" "$HOME/.bash_history"
+
+  export HISTFILE=/dev/null
+  fc -p
+
+  echo -e '\e[93mHistory tracking DISABLED. History files cleared.\e[0m'
+}
+
+histon() {
+  if [[ -f "$HOME/.bashrc" ]] && grep -qxF 'export HISTFILE=/dev/null' "$HOME/.bashrc"; then
+    grep -vxF 'export HISTFILE=/dev/null' "$HOME/.bashrc" > "$HOME/.bashrc.tmp" && mv "$HOME/.bashrc.tmp" "$HOME/.bashrc"
+  fi
+
+  echo -e '\e[92mHistory tracking ENABLED.\e[0m'
+}
+
+#Uninstall
+alias txuninstall="bash $HOME/myTermux/uninstall.sh"
+
+#Update
+alias txupdate="bash $HOME/.local/bin/mytermux-update"
+
+txclean() {
+  local names=(.autostart .aliases .config .colorscheme .fonts .local .scripts .termux .tmux.conf .zshrc .oh-my-zsh)
+  local item freed=0 count=0
+
+  echo -e "\n  This removes all myTermux timestamped backups (~/.<name>.<date>.backup).\n  This cannot be undone.\n"
+
+  local confirm
+  while :; do
+    if [[ -n "$ZSH_VERSION" ]]; then
+      read "confirm?  Remove all myTermux backups? [y/N] "
+    else
+      read -r -p "  Remove all myTermux backups? [y/N] " confirm
+    fi
+
+    case "$confirm" in
+      y | Y )
+        break
+      ;;
+      n | N )
+        echo -e "\n  Aborted — nothing was removed.\n"
+        return 0
+      ;;
+      "" )
+        echo -e "\n  No answer given — type 'y' to confirm deletion or 'n' to abort.\n"
+      ;;
+      * )
+        echo -e "\n  Unknown '${confirm}' — type 'y' to confirm deletion or 'n' to abort.\n"
+      ;;
+    esac
+  done
+  echo -e "\n"
+
+  for name in "${names[@]}"; do
+    for item in "$HOME/${name}".*.backup; do
+      [[ -e "$item" ]] || continue
+      freed=$(( freed + $(du -sk "$item" 2> /dev/null | awk '{print $1}') ))
+      rm -rf "$item"
+      echo -e "    removed ${item}"
+      count=$(( count + 1 ))
+    done
+  done
+
+  if [[ $count -eq 0 ]]; then
+    echo -e "    Nothing to clean — no backups or logs found."
+  else
+    echo -e "\n    Removed ${count} item(s), freed ~$(( (freed + 1023) / 1024 )) MB.\n"
+  fi
+}
+
+#Help
+txhelp() {
+  echo -e "\n  \e[1;36mmyTermux\e[0m - available commands (\e[93mtxhelp\e[0m prints this list)\n  \e[36m────────────────────────────────────────────────────────────\e[0m\n"
+
+  echo -e "  \e[1;33m  Customize\e[0m"
+  [[ -e "$HOME/.scripts/colorscheme/colors.sh" ]] && echo -e "    chcolor                 switch colorscheme"
+  [[ -e "$HOME/.scripts/fonts/fonts.sh" ]] && echo -e "    chfont                  switch font (local)"
+  [[ -e "$HOME/.scripts/zsh/changetheme.sh" ]] && echo -e "    chzsh                   switch zsh prompt theme"
+  echo -e "    setuser [name]          set custom prompt username (blank asks)"
+  [[ -e "$HOME/myTermux/uninstall.sh" ]] && echo -e "    txuninstall             run the myTermux uninstaller"
+  [[ -e "$HOME/.local/bin/mytermux-update" ]] && echo -e "    txupdate                fetch latest myTermux & re-run installer"
+  echo -e "    txclean                 remove myTermux backup folders & logs"
+
+  echo -e "\n  \e[1;33m  System info\e[0m"
+  if [[ -e "$HOME/.scripts/system/fetch.sh" ]]; then
+    echo -e "    fetch                   fetch.sh (music / battery / storage)"
+    echo -e "    disk                    storage usage"
+    echo -e "    battery                 battery status"
+  fi
+  if [[ -e "$HOME/.local/bin/rxfetch" ]] || command -v neofetch >/dev/null 2>&1; then
+    echo -e "    rxfetch / neo           ascii fetch / neofetch"
+  fi
+
+  echo -e "\n  \e[1;33m  History\e[0m"
+  echo -e "    histoff / histon        disable / enable history tracking"
+  echo -e "    histoff wipes the history files and pins HISTFILE=/dev/null in ~/.bashrc"
+  echo -e "    histon removes that line to re-enable tracking"
+
+  echo -e "\n  \e[1;33m  Packages, git & music\e[0m"
+  echo -e "    pacupg / pacupd / pacupgupd     pkg upgrade / update"
+  echo -e "    gitgraph / gitupdate / gitstat / gitad / gitcom"
+  local TXMUSIC=""
+  [[ -e "$HOME/.local/bin/music" ]] && TXMUSIC="m (music)"
+  if command -v ncmpcpp >/dev/null 2>&1; then
+    [[ -n "$TXMUSIC" ]] && TXMUSIC="${TXMUSIC} / n (ncmpcpp)" || TXMUSIC="n (ncmpcpp)"
+  fi
+  if command -v mpd >/dev/null 2>&1; then
+    [[ -n "$TXMUSIC" ]] && TXMUSIC="${TXMUSIC} / mkill" || TXMUSIC="mkill"
+  fi
+  [[ -n "$TXMUSIC" ]] && echo -e "    ${TXMUSIC}"
+
+  echo -e "\n  \e[1;33m  Tools & extras\e[0m"
+  if [[ -e "$HOME/.scripts/system/ip.sh" ]]; then
+    echo -e "    myip / myipwifi / myiphotspot / myipvpn / myipall"
+  fi
+  if [[ -d "$HOME/.scripts/toys" ]]; then
+    echo -e "    pipes pipes1 pipes2 dna pacman rains spacey ghost jfetch"
+  fi
+  if [[ -e "$HOME/.local/bin/ytdl" || -e "$HOME/.local/bin/gitssh" || -e "$HOME/.local/bin/ipconfig" || -e "$HOME/.scripts/js/repochecker.js" ]] || ls "$HOME/.local/bin"/macfinder* >/dev/null 2>&1; then
+    echo -e "    ytdl gitssh ipconfig macfinder repocek"
+  fi
+
+  echo -e "\n  \e[1;33m  Everyday\e[0m"
+  echo -e "    refresh                 reload ~/.zshrc"
+  echo -e "    unsource                restart shell (login)"
+  echo -e "    c (clear)  q (exit)  sd (sdcard)  dl ms ss archives largefile"
+
+  echo -e "\n  \e[1;33m  Edit configs (nvim)\e[0m"
+  if command -v nvim >/dev/null 2>&1; then
+    local TXEDIT="    aliasconf zshconf fetchconf termconf rxconf neoconf"
+    if [[ -d "$HOME/.config/mpd" || -d "$HOME/.config/ncmpcpp" ]]; then
+      TXEDIT="${TXEDIT} mpdconf ncmconf"
+    fi
+    echo -e "${TXEDIT}"
+  fi
+
+  echo -e "\n  Tip: aliases live in ~/.aliases (aliasconf). Type the alias name to run it.\n"
+}

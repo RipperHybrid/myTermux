@@ -27,6 +27,7 @@ done
 tput smcup
 tput reset
 tput civis
+trap "tput rmcup; tput cnorm; stty sane 2>/dev/null; exit" SIGINT SIGTERM
 while ! read -t0.0$((1000/$f)) -n1; do
     # New position:
     (($l%2)) && ((x+=($l==1)?1:-1))

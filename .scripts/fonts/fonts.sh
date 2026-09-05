@@ -11,122 +11,240 @@ for LIBRARY in ${LIBRARYS[@]}; do
 done
 
 FONTS_DIR="${HOME}/.fonts"
-INDEX_LOOP=0
-
 FONT_USED_PATH="${HOME}/.config/mytermux/fonts"
 FONT_USED_FILE_NAME="used.log"
-FONT_USED="$(cat ${FONT_USED_PATH}/${FONT_USED_FILE_NAME})"
+FONT_USED="$(cat ${FONT_USED_PATH}/${FONT_USED_FILE_NAME} 2>/dev/null)"
 
-TERMUX_CONFIGURATION_PATH="${HOME}/.termux"
-TERMUX_CONFIGURATION_FONT_FILE_NAME="font.ttf"
+TERMUX_CONF_PATH="${HOME}/.termux"
+TERMUX_FONT_FILE="font.ttf"
+TERMUX_CACHE_PATH="/data/data/com.termux/cache"
+FONT_BACKUP_FILE="${TERMUX_CACHE_PATH}/font_backup.ttf"
+PREVIEW_MARKER="${TERMUX_CACHE_PATH}/.font_preview_active"
+
+mkdir -p "${FONTS_DIR}" "${FONT_USED_PATH}" "${TERMUX_CONF_PATH}" "${TERMUX_CACHE_PATH}"
+
+PREVIEW_ACTIVE=false
 
 function banner() {
-
-  echo -e "
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m _______                    
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m(_______)          _        
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m _____ ___  ____ _| |_  ___ 
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m|  ___) _ \|  _ (_   _)/___)
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m| |  | |_| | | | || |_|___ |
-\e[3$(( $RANDOM * 6 / 32767 + 1 ))m|_|   \___/|_| |_| \__|___/ 
-${COLOR_BASED}\n"
-
+  echo -e "${COLOR_SKY} _______
+(_______)          _
+ _____ ___  ____ _| |_  ___
+|  ___) _ \\|  _ (_   _)/___)
+| |  | |_| | | | || |_|___ |
+|_|   \\___/|_| |_| \\__|___/ 
+${COLOR_BASED}"
 }
 
-function listFonts() {
+function apply_font() {
+  local font_file="$1"
+  local font_name="$2"
+
+  cp -f "${font_file}" "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+  termux-reload-settings
+  echo "${font_name}" > "${FONT_USED_PATH}/${FONT_USED_FILE_NAME}"
+}
+
+function is_valid_font() {
+  local sig_file="${TERMUX_CACHE_PATH}/.font_sig_check"
+
+  printf '\x00\x01\x00\x00' > "${sig_file}"
+  cmp -s -n 4 "${sig_file}" "$1" && return 0
+
+  printf 'OTTO' > "${sig_file}"
+  cmp -s -n 4 "${sig_file}" "$1"
+}
+
+function restore_font_from_backup() {
+  if [[ -f "${FONT_BACKUP_FILE}" ]]; then
+    mv -f "${FONT_BACKUP_FILE}" "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+  else
+    rm -f "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+  fi
+  termux-reload-settings
+}
+
+function preview_font_live() {
+  local target_ttf="$1"
+
+  if [[ ! -f "${target_ttf}" ]] || ! is_valid_font "${target_ttf}"; then
+    stat "ERROR" "Danger" "$(basename "${target_ttf}") is not a valid font file."
+    return 2
+  fi
+
+  clear
+  echo -e "\n${COLOR_WARNING}Live Preview Notice${COLOR_BASED}"
+  echo -e "The terminal font will temporarily switch for the whole Termux app,"
+  echo -e "including other open sessions like ${COLOR_SUCCESS}nvim${COLOR_BASED}."
+  echo -e "Answering ${COLOR_SUCCESS}n${COLOR_BASED} or pressing ${COLOR_WARNING}Ctrl-C${COLOR_BASED}"
+  echo -e "restores your previous font automatically."
+  echo -e "If the preview font looks unreadable, type ${COLOR_SUCCESS}n${COLOR_BASED} and press Enter.\n"
+
+  if [[ -f "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}" ]]; then
+    if ! cp -f "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}" "${FONT_BACKUP_FILE}" 2>/dev/null; then
+      stat "ERROR" "Danger" "Could not back up the current font to ${TERMUX_CACHE_PATH}. Aborting preview."
+      return 2
+    fi
+  fi
+
+  if ! : > "${PREVIEW_MARKER}" 2>/dev/null; then
+    stat "ERROR" "Danger" "Cannot write preview marker to ${TERMUX_CACHE_PATH}. Aborting preview."
+    rm -f "${FONT_BACKUP_FILE}"
+    return 2
+  fi
+
+  PREVIEW_ACTIVE=true
+
+  cp -f "${target_ttf}" "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+  termux-reload-settings
+
+  clear
+  echo -e "\n${COLOR_WARNING}--- LIVE FONT PREVIEW : $(basename "${target_ttf}") ---${COLOR_BASED}\n"
+  echo -e "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  echo -e "abcdefghijklmnopqrstuvwxyz"
+  echo -e "0123456789 () [] {} <>"
+  echo -e "The quick brown fox jumps over the lazy dog."
+  echo -e "echo 'Hello World' && ls -lgha | grep -E '^d'"
+  echo -e "\n${COLOR_WARNING}----------------------------------------${COLOR_BASED}\n"
+
+  if ! read -p "Apply this font permanently? [Y/n] " CONFIRM; then
+    PREVIEW_ACTIVE=false
+    rm -f "${PREVIEW_MARKER}"
+    restore_font_from_backup
+    return 1
+  fi
+
+  case "${CONFIRM}" in
+    "" | y | Y )
+      PREVIEW_ACTIVE=false
+      rm -f "${FONT_BACKUP_FILE}" "${PREVIEW_MARKER}"
+      return 0
+    ;;
+    * )
+      PREVIEW_ACTIVE=false
+      rm -f "${PREVIEW_MARKER}"
+      restore_font_from_backup
+      return 1
+    ;;
+  esac
+}
+
+function list_local_fonts() {
+  FONT_USED="$(cat ${FONT_USED_PATH}/${FONT_USED_FILE_NAME} 2>/dev/null)"
 
   clear
   setCursor off
   banner
   printf " %3s  %9s                                   %4s\n\n" "No." "List Font" "Status"
 
-  for FONT in ${FONTS_DIR}/{*.ttf,*.otf}; do
+  local index=0
+  local font_files=()
+  local font_names=()
+  local font_display=()
 
-    FONT_FILE_NAME[INDEX_LOOP]=$( echo ${FONT} | awk -F'/' '{print $NF}')
-    FONT_LIST_NAME[INDEX_LOOP]=$( echo ${FONT} | awk -F'/' '{print $NF}' | sed "s/.ttf//g" | sed "s/.otf//g")
+  for FONT in "${FONTS_DIR}"/{*.ttf,*.otf}; do
+    [[ -f "${FONT}" ]] || continue
 
-    if [ "${FONT_USED}" == "${FONT_FILE_NAME[INDEX_LOOP]}" ]; then
+    local fname
+    fname=$(basename "${FONT}")
+    font_files+=("${FONT}")
+    font_names+=("${fname}")
+    font_display+=("${fname%.*}")
 
-      printf "[${COLOR_SUCCESS}%2s${COLOR_BASED}]  ${COLOR_SUCCESS}%b %-s %b %b % b %b${COLOR_BASED}   ${COLOR_SUCCESS}%-4s${COLOR_BASED}\n" ${INDEX_LOOP} ${FONT_LIST_NAME[INDEX_LOOP]} "--> USED"
-
+    if [[ "${FONT_USED}" == "${fname}" ]]; then
+      printf "[${COLOR_SUCCESS}%2s${COLOR_BASED}]  ${COLOR_SUCCESS}%-35s --> USED${COLOR_BASED}\n" "${index}" "${fname%.*}"
     else
-
-      echo -e "[ ${COLOR_WARNING}${INDEX_LOOP}${COLOR_BASED}]  ${FONT_LIST_NAME[INDEX_LOOP]}"
-
+      printf "[${COLOR_WARNING}%2s${COLOR_BASED}]  %-35s\n" "${index}" "${fname%.*}"
     fi
 
-    INDEX_LOOP=$(( ${INDEX_LOOP} + 1 ));
-
+    index=$((index + 1))
   done
-
-  INDEX_LOOP=$(( ${INDEX_LOOP} - 1 ));
 
   echo ""
-
-}
-
-function selectFont() {
-
+  printf "[${COLOR_DANGER}x${COLOR_BASED}]  %-35s\n" "Exit"
+  echo ""
   setCursor on
 
+  if [[ ${#font_files[@]} -eq 0 ]]; then
+    stat "INFO" "Warning" "No local fonts found in ${FONTS_DIR}"
+    return 1
+  fi
+
   while :; do
-
-    read -p "Select font: " INDEX_FONT
-
-    if [ -z "${INDEX_FONT}" ]; then
-
-      break;
-
-    elif ! [[ ${INDEX_FONT} =~ ^[0-9]+$ ]]; then
-
-      stat "ERROR" "Danger" "Unknown '${COLOR_DANGER}number${COLOR_BASED}', please enter the right number!\n"
-
-    elif (( ${INDEX_FONT} >= 0 && ${INDEX_FONT} <= ${INDEX_LOOP} )); then
-
-      start_animation "Applying Font ..."
-      sleep 1s
-
-      if cp -fr "${FONTS_DIR}/${FONT_FILE_NAME[INDEX_FONT]}" "${TERMUX_CONFIGURATION_PATH}/${TERMUX_CONFIGURATION_FONT_FILE_NAME}"; then
-
-        termux-reload-settings
-
-        if [ ! -f ${FONT_USED_PATH}/${FONT_USED_FILE_NAME} ]; then
-
-          echo -e "${FONT_FILE_NAME[INDEX_FONT]}" >> ${FONT_USED_PATH}/${FONT_USED_FILE_NAME}
-
-        elif [ -f ${FONT_USED_PATH}/${FONT_USED_FILE_NAME} ]; then
-
-          sed -i "s/${FONT_USED}/${FONT_FILE_NAME[INDEX_FONT]}/g" ${FONT_USED_PATH}/${FONT_USED_FILE_NAME}
-
-        fi
-
-        stop_animation $? || exit 1
-
-      else
-
-        stop_animation $?
-
+    read -p "Select font number (or press Enter to exit): " CHOICE
+    if [[ -z "${CHOICE}" || "${CHOICE}" =~ ^[xX]$ ]]; then
+      exit 0
+    elif [[ "${CHOICE}" =~ ^[0-9]+$ ]] && (( CHOICE >= 0 && CHOICE < ${#font_files[@]} )); then
+      preview_font_live "${font_files[CHOICE]}"
+      local preview_status=$?
+      if [[ "${preview_status}" -eq 0 ]]; then
+        apply_font "${font_files[CHOICE]}" "${font_names[CHOICE]}"
+        stat "SUCCESS" "Success" "Applied ${font_display[CHOICE]}"
+      elif [[ "${preview_status}" -ne 2 ]]; then
+        stat "INFO" "Warning" "Font unchanged."
       fi
-
-      break 
-
+      exit 0
     else
-
-      stat "ERROR" "Danger" "Unknown '${COLOR_DANGER}number${COLOR_BASED}', please enter the right number!\n"
-
+      stat "ERROR" "Danger" "Invalid selection, please enter a number between 0 and $(( ${#font_files[@]} - 1 ))"
     fi
-
   done
+}
 
+function abort_font_manager() {
+  if [[ "${PREVIEW_ACTIVE}" == true ]]; then
+    restore_font_from_backup
+    rm -f "${PREVIEW_MARKER}"
+    PREVIEW_ACTIVE=false
+    echo -e "\n${COLOR_WARNING}INFO${COLOR_BASED} : Preview aborted, your previous font was restored."
+  else
+    echo -e "\n${COLOR_WARNING}INFO${COLOR_BASED} : Aborted."
+  fi
+
+  setCursor on
+  exit 1
+}
+
+function recover_interrupted_preview() {
+  [[ -f "${PREVIEW_MARKER}" ]] || return 0
+
+  clear
+  banner
+  stat "INFO" "Warning" "An interrupted font preview was detected."
+
+  if [[ -f "${FONT_BACKUP_FILE}" ]]; then
+    read -p "Restore the font that was active before the preview? [Y/n] " RECOVER
+    case "${RECOVER}" in
+      "" | y | Y )
+        mv -f "${FONT_BACKUP_FILE}" "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+        termux-reload-settings
+        stat "SUCCESS" "Success" "Previous font restored."
+      ;;
+      * )
+        rm -f "${FONT_BACKUP_FILE}"
+        stat "INFO" "Warning" "Keeping the preview font, backup discarded."
+      ;;
+    esac
+  else
+    read -p "Remove the preview font and return to the Termux default? [Y/n] " RECOVER
+    case "${RECOVER}" in
+      "" | y | Y )
+        rm -f "${TERMUX_CONF_PATH}/${TERMUX_FONT_FILE}"
+        termux-reload-settings
+        stat "SUCCESS" "Success" "Default Termux font restored."
+      ;;
+      * )
+        stat "INFO" "Warning" "Keeping the preview font."
+      ;;
+    esac
+  fi
+
+  rm -f "${PREVIEW_MARKER}"
 }
 
 function main() {
+  trap 'abort_font_manager' 2
 
-  trap 'handleInterruptByUser "Interrupt by User"' 2
-
-  listFonts
-  selectFont
-
+  recover_interrupted_preview
+  list_local_fonts
 }
 
 main

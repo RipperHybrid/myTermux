@@ -107,7 +107,7 @@ do_exit() {
 
   tput rmcup
   tput cnorm
-  stty echo
+  stty sane 2>/dev/null || stty echo
   ((NOCOLOR)) && echo -ne '\e[0m'
   exit 0
   }
@@ -170,7 +170,7 @@ while REPLY=; read -t $I -n 1; [[ -z $REPLY ]] ; do
     # 3: x+1 y+1
     ((xn = e < 2 ? x + 1 : x - 1))
     ((yn = d < 2 ? y - 1 : y + 1))
-    
+
     # adjust position and change color?
     ((d < 2 && y == 0)) && ((yn--, CC=1))
     ((e > 1 && x == 0)) && ((xn--, CC=1))
