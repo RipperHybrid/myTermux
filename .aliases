@@ -183,7 +183,8 @@ alias aliasconf="nvim ~/.aliases"
 alias startconf="nvim ~/.autostart"
 
 alias repocek="node ~/.scripts/js/repochecker.js"
-alias dlv="ytdl"
+alias dlv="ytdlp"
+alias ytdl="ytdlp"
 
 alias schemeconf="nvim ~/.scripts/colorscheme/colors.sh"
 alias fontsconf="nvim ~/.scripts/fonts/fonts.sh"
@@ -316,8 +317,8 @@ txhelp() {
   if [[ -d "$HOME/.scripts/toys" ]]; then
     echo -e "    pipes pipes1 pipes2 dna pacman rains spacey ghost jfetch"
   fi
-  if [[ -e "$HOME/.local/bin/ytdl" || -e "$HOME/.local/bin/dlv" || -e "$HOME/.local/bin/gitssh" || -e "$HOME/.local/bin/ipconfig" || -e "$HOME/.scripts/js/repochecker.js" ]] || ls "$HOME/.local/bin"/macfinder* >/dev/null 2>&1; then
-    echo -e "    ytdl / dlv gitssh ipconfig macfinder repocek"
+  if [[ -e "$HOME/.local/bin/ytdlp" || -e "$HOME/.local/bin/gitssh" || -e "$HOME/.local/bin/ipconfig" || -e "$HOME/.scripts/js/repochecker.js" ]] || ls "$HOME/.local/bin"/macfinder* >/dev/null 2>&1; then
+    echo -e "    ytdlp (dlv/ytdl) gitssh ipconfig macfinder repocek"
   fi
 
   echo -e "\n  \e[1;33m  Everyday\e[0m"

@@ -33,9 +33,10 @@ function cleanupNvChad() {
 function cleanupExtraTools() {
   stat "RUN" "Warning" "Purging Extra CLI Tools and JS scripts..."
 
-  rm -rf ~/.scripts/js ~/.local/bin/macfinder* ~/.local/bin/ytdl ~/.local/bin/dlv ~/.local/bin/gitssh ~/.local/bin/ipconfig
+  rm -rf ~/.scripts/js ~/.local/bin/macfinder* ~/.local/bin/ytdlp ~/.local/bin/ytdl ~/.local/bin/dlv ~/.local/bin/gitssh ~/.local/bin/ipconfig
 
   sed -i '/alias repocek/d' ~/.aliases 2>/dev/null
   sed -i '/alias convi/d' ~/.aliases 2>/dev/null
   sed -i '/alias dlv/d' ~/.aliases 2>/dev/null
+  sed -i '/alias ytdl/d' ~/.aliases 2>/dev/null
 }

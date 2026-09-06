@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# dlv - Universal Media Downloader wrapper (alias for ytdl)
-exec "$(dirname "$0")/ytdl" "$@"

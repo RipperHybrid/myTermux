@@ -178,9 +178,11 @@ function installExtraTools() {
     local PIP_BIN="pip"
     command -v pip3 >/dev/null 2>&1 && PIP_BIN="pip3"
 
-    start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}yt-dlp & gallery-dl${COLOR_WARNING}'${COLOR_BASED} ..."
-    $PIP_BIN install --upgrade --no-cache-dir yt-dlp gallery-dl &> /dev/null
-    stop_animation $?
+    for PY_PKG in yt-dlp gallery-dl; do
+      start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}${PY_PKG}${COLOR_WARNING}'${COLOR_BASED} ..."
+      $PIP_BIN install --upgrade --no-cache-dir "${PY_PKG}" &> /dev/null
+      stop_animation $?
+    done
   fi
 
   setCursor on

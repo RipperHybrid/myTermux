@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Universal Media Downloader (ytdl / dlv)
+# Universal Media Downloader (ytdlp / dlv / ytdl)
 # Supports YouTube, Instagram, Pinterest, TikTok, Twitter/X, Reddit, SoundCloud, and 1000+ sites.
 
 COLOR_RESET="\e[0m"
@@ -11,7 +11,7 @@ COLOR_INFO="\e[96m"
 COLOR_CYAN="\e[36m"
 COLOR_MUTED="\e[90m"
 
-APP_NAME="ytdl"
+APP_NAME="ytdlp"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Logging helpers
@@ -109,14 +109,15 @@ function get_cookie_args() {
 function show_help() {
   echo -e "
 ${COLOR_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}
-  ${COLOR_INFO}Universal Media Downloader${COLOR_RESET} (${COLOR_WARNING}ytdl${COLOR_RESET} / ${COLOR_WARNING}dlv${COLOR_RESET})
+  ${COLOR_INFO}Universal Media Downloader${COLOR_RESET} (${COLOR_WARNING}ytdlp${COLOR_RESET} / ${COLOR_WARNING}dlv${COLOR_RESET} / ${COLOR_WARNING}ytdl${COLOR_RESET})
   Supports YouTube, Instagram, Pinterest, TikTok, X, Reddit, etc.
 ${COLOR_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}
 
 ${COLOR_WARNING}Usage:${COLOR_RESET}
-  ${COLOR_SUCCESS}ytdl${COLOR_RESET} <url>                    ${COLOR_MUTED}Smart auto-download (best video+audio mp4)${COLOR_RESET}
-  ${COLOR_SUCCESS}ytdl${COLOR_RESET} [mode] <url>             ${COLOR_MUTED}Download with specific format mode${COLOR_RESET}
-  ${COLOR_SUCCESS}dlv${COLOR_RESET}  <url>                    ${COLOR_MUTED}Universal media downloader shortcut${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdlp${COLOR_RESET} <url>                   ${COLOR_MUTED}Smart auto-download (best video+audio mp4)${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdlp${COLOR_RESET} [mode] <url>            ${COLOR_MUTED}Download with specific format mode${COLOR_RESET}
+  ${COLOR_SUCCESS}dlv${COLOR_RESET}   <url>                   ${COLOR_MUTED}Universal media downloader shortcut${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdl${COLOR_RESET}  <url>                   ${COLOR_MUTED}Legacy media downloader shortcut${COLOR_RESET}
 
 ${COLOR_WARNING}Modes:${COLOR_RESET}
   ${COLOR_SUCCESS}• best${COLOR_RESET}    <url>  ${COLOR_MUTED}> Best video + audio merged (mp4)${COLOR_RESET}
@@ -148,7 +149,8 @@ function download_pinterest() {
   local url="$1"
   if command -v gallery-dl >/dev/null 2>&1; then
     log_info "Using gallery-dl for Pinterest media extraction..."
-    gallery-dl "$url"
+    # -o directory=[] prevents creating nested gallery-dl/pinterest/ subdirectories
+    gallery-dl --directory . -o "directory=[]" "$url"
   else
     log_info "gallery-dl not found, attempting download via yt-dlp..."
     log_warning "Tip: Run 'pip install gallery-dl' for full Pinterest multi-image/board support."
@@ -191,16 +193,16 @@ function prompt_move_to_downloads() {
       local count=0
       local find_cmd=()
       if [[ -n "$marker" && -f "$marker" ]]; then
-        find_cmd=(find . -maxdepth 1 -type f ! -name ".*" -newer "$marker")
+        find_cmd=(find . -type f ! -name ".*" -newer "$marker")
       else
-        find_cmd=(find . -maxdepth 1 -type f ! -name ".*" -mmin -60)
+        find_cmd=(find . -type f ! -name ".*" -mmin -60)
       fi
 
       while IFS= read -r f; do
         if [[ -f "$f" ]]; then
           local base_f="$(basename "$f")"
-          # Only move media files
-          if [[ "$base_f" =~ \.(mp4|mkv|webm|mp3|m4a|opus|flac|wav|jpg|jpeg|png|webp|gif|zip)$ ]]; then
+          # Move matching media and downloaded files
+          if [[ "$base_f" =~ \.(mp4|mkv|webm|mp3|m4a|opus|flac|wav|jpg|jpeg|png|webp|gif|zip|json)$ || ! "$base_f" =~ \.(sh|bash|zsh|lua|conf|txt|log|md)$ ]]; then
             mv -f "$f" "$target_dir/$base_f" 2>/dev/null
             if [[ -f "$target_dir/$base_f" ]]; then
               log_success "Moved '$base_f' -> ${target_dir}/"
@@ -226,8 +228,11 @@ function prompt_move_to_downloads() {
               ((count++))
             fi
           fi
-        done < <("${find_cmd[@]}")
+        done < <(find . -type f ! -name ".*" -mmin -60)
       fi
+
+      # Clean up any empty folders created during download (like ./gallery-dl)
+      find . -mindepth 1 -depth -type d -empty -delete 2>/dev/null
       ;;
     * )
       log_info "File saved in current directory: $(pwd)"
@@ -363,13 +368,13 @@ if [[ "$1" == "help" || "$1" == "--help" || "$1" == "-h" ]]; then
   exit 0
 fi
 
-# Direct URL passed without mode: ytdl "https://..."
+# Direct URL passed without mode: ytdlp "https://..."
 if [[ "$1" =~ ^https?:// || "$1" =~ ^www\. || "$1" =~ ^[a-zA-Z0-9_-]+\.[a-zA-Z]{2,} ]]; then
   run_download "best" "$1"
   exit $?
 fi
 
-# Mode passed: ytdl <mode> <url>
+# Mode passed: ytdlp <mode> <url>
 if [[ -n "$1" && -n "$2" ]]; then
   run_download "$1" "$2"
   exit $?

@@ -38,7 +38,7 @@ function main() {
     "true" cleanupToys
 
   switchCase "Install" "Extra CLI Tools" \
-    "Productivity shortcuts for media downloading (ytdl/dlv with ffmpeg & yt-dlp), SSH keys, and network info." \
+    "Productivity shortcuts for media downloading, SSH keys, and network info." \
     installExtraTools cleanupExtraTools
 
   repositories
