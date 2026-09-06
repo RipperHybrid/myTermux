@@ -1,6 +1,11 @@
-# Powerline — segmented arrows prompt (requires Nerd Fonts)
-# Left: user@host then current folder
-# Right: git branch/status, prefixed by a red ✗ after a failed command
+# Powerline — segmented arrows prompt with user & git support
+
+if ! type mytermux_user >/dev/null 2>&1; then
+  function mytermux_user() {
+    local ufile="${HOME}/.config/mytermux/user.log"
+    if [[ -s "$ufile" ]]; then cat "$ufile"; else echo "${USER:-$(whoami 2>/dev/null || echo "user")}"; fi
+  }
+fi
 
 if [[ $EUID -eq 0 ]]; then
     USER_BG=1
@@ -8,14 +13,13 @@ else
     USER_BG=4
 fi
 
-# First segment: user@host on a colored block
-# Second segment: current folder on a black block, joined by a powerline arrow
-PROMPT="%K{${USER_BG}}%F{0} $(mytermux_user) %F{${USER_BG}}%K{0}"$'\uE0B0'"%F{7} %2~ %k%f "
-RPROMPT='%(0?..%F{1}✗ %f)$(git_prompt_info)'
+PROMPT="%K{${USER_BG}}%F{0}  $(mytermux_user) %K{0}%F{${USER_BG}}%F{7}  %2~ %K{8}%F{0}%f"
+PROMPT+='$(git_prompt_info)%{%k%}%F{8}%f '
+RPROMPT='%(0?..%F{1}✗ %f)%F{8}%T%f'
 
 zle_highlight=(default:bold)
 
-ZSH_THEME_GIT_PROMPT_PREFIX="%F{5}git:(%F{6}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%f) "
+ZSH_THEME_GIT_PROMPT_PREFIX="%K{8}%F{5}  %F{6}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%K{8} "
 ZSH_THEME_GIT_PROMPT_DIRTY="%F{3}✗"
-ZSH_THEME_GIT_PROMPT_CLEAN=""
+ZSH_THEME_GIT_PROMPT_CLEAN="%F{2}✔"

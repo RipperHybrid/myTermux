@@ -48,7 +48,7 @@ export COLUMNS LINES
 
 - 🎨 **Colorscheme Manager** — switch between terminal color themes live with `chcolor`
 - 🔤 **Font Manager** — `chfont` lists fonts in `~/.fonts` and previews them live before applying; answering `n` or pressing `Ctrl+C` restores your previous font automatically
-- 💻 **ZSH Theme Manager** — live switcher (`chzsh`) for 12 custom prompt styles (ma, powerline, pure, status, etc.)
+- 💻 **ZSH Theme Manager** — live switcher (`chzsh`) for 17 custom prompt styles (cyberpunk, catppuccin, tokyonight, dracula, nord, ma, powerline, pure, status, etc.)
 - ✏️ **Custom Prompt Username** — `setuser [name]` sets a custom display name in prompt themes in place of `user@host`
 - ⚡ **Dynamic Fetch Display** — automatically starts with your preferred fetch screen (`neo` / `rxfetch`), remembered each time you run either
 - 🔎 **Interactive Missing-Command Installer** — typing an unknown command provides an interactive menu of matching packages with instant installation

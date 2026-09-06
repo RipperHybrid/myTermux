@@ -13,6 +13,11 @@ ZSH_CUSTOM_THEMES=(
   pure.zsh-theme
   powerline.zsh-theme
   status.zsh-theme
+  cyberpunk.zsh-theme
+  catppuccin.zsh-theme
+  tokyonight.zsh-theme
+  dracula.zsh-theme
+  nord.zsh-theme
 )
 
 function zshTheme() {

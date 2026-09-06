@@ -53,7 +53,7 @@ function main() {
 
   zshTheme
   switchCase "Install" "ZSH Themes" \
-    "12 prompt themes with git indicators, directory paths, and custom styling." \
+    "17 prompt themes with git indicators, directory paths, and custom styling." \
     installZshTheme
 
   switchCase "Install" "NvChad" \
