@@ -59,6 +59,18 @@ source $ZSH/oh-my-zsh.sh
 
 source $HOME/.aliases
 
+# Apply persistent history state (histoff / histon)
+if [[ -f "${HOME}/.config/mytermux/history_disabled" ]]; then
+  unset HISTFILE
+  export HISTFILE=/dev/null
+  export HISTSIZE=0
+  export SAVEHIST=0
+  unsetopt SHARE_HISTORY 2>/dev/null
+  unsetopt INC_APPEND_HISTORY 2>/dev/null
+  unsetopt APPEND_HISTORY 2>/dev/null
+  setopt NO_SHARE_HISTORY 2>/dev/null
+fi
+
 command_not_found_handler() {
   local cmd="$1"
   local cnf_bin="$PREFIX/libexec/termux/command-not-found"

@@ -196,22 +196,41 @@ alias open="termux-open"
 
 #History Management
 histoff() {
+  mkdir -p "$HOME/.config/mytermux"
+  touch "$HOME/.config/mytermux/history_disabled"
+
   grep -qxF 'export HISTFILE=/dev/null' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' 'export HISTFILE=/dev/null' >> "$HOME/.bashrc"
 
   rm -f "$HOME/.zsh_history" "$HOME/.bash_history"
 
+  unset HISTFILE
   export HISTFILE=/dev/null
-  fc -p
+  export HISTSIZE=0
+  export SAVEHIST=0
+  unsetopt SHARE_HISTORY 2>/dev/null
+  unsetopt INC_APPEND_HISTORY 2>/dev/null
+  unsetopt APPEND_HISTORY 2>/dev/null
+  setopt NO_SHARE_HISTORY 2>/dev/null
+  fc -p /dev/null 0 0 2>/dev/null
 
-  echo -e '\e[93mHistory tracking DISABLED. History files cleared.\e[0m'
+  echo -e '\e[93mHistory tracking DISABLED (persistent across ZSH & Bash). History files cleared.\e[0m'
 }
 
 histon() {
+  rm -f "$HOME/.config/mytermux/history_disabled"
+
   if [[ -f "$HOME/.bashrc" ]] && grep -qxF 'export HISTFILE=/dev/null' "$HOME/.bashrc"; then
     grep -vxF 'export HISTFILE=/dev/null' "$HOME/.bashrc" > "$HOME/.bashrc.tmp" && mv "$HOME/.bashrc.tmp" "$HOME/.bashrc"
   fi
 
-  echo -e '\e[92mHistory tracking ENABLED.\e[0m'
+  export HISTFILE="$HOME/.zsh_history"
+  export HISTSIZE=50000
+  export SAVEHIST=10000
+  setopt SHARE_HISTORY 2>/dev/null
+  setopt INC_APPEND_HISTORY 2>/dev/null
+  setopt EXTENDED_HISTORY 2>/dev/null
+
+  echo -e '\e[92mHistory tracking ENABLED (persistent across sessions).\e[0m'
 }
 
 #Uninstall
@@ -323,8 +342,8 @@ txhelp() {
 
   echo -e "\n  \e[1;33m  History\e[0m"
   echo -e "    histoff / histon        disable / enable history tracking"
-  echo -e "    histoff wipes the history files and pins HISTFILE=/dev/null in ~/.bashrc"
-  echo -e "    histon removes that line to re-enable tracking"
+  echo -e "    histoff wipes history files and disables tracking persistently in ZSH & Bash"
+  echo -e "    histon re-enables history tracking across sessions"
 
   echo -e "\n  \e[1;33m  Packages, git & music\e[0m"
   echo -e "    pacupg / pacupd / pacupgupd     pkg upgrade / update"
