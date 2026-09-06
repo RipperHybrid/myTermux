@@ -27,7 +27,7 @@ CONFIG_DIRS=(
 )
 
 LOCAL_BIN_FILES=(
-  music rxfetch ytdl gitssh ipconfig mytermux-update
+  music rxfetch ytdlp ytdl dlv gitssh ipconfig mytermux-update
 )
 
 BACKUP_ITEMS=(

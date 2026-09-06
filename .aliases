@@ -183,6 +183,8 @@ alias aliasconf="nvim ~/.aliases"
 alias startconf="nvim ~/.autostart"
 
 alias repocek="node ~/.scripts/js/repochecker.js"
+alias dlv="ytdlp"
+alias ytdl="ytdlp"
 
 alias schemeconf="nvim ~/.scripts/colorscheme/colors.sh"
 alias fontsconf="nvim ~/.scripts/fonts/fonts.sh"
@@ -222,14 +224,16 @@ txclean() {
   local names=(.autostart .aliases .config .colorscheme .fonts .local .scripts .termux .tmux.conf .zshrc .oh-my-zsh)
   local item freed=0 count=0
 
-  echo -e "\n  This removes all myTermux timestamped backups (~/.<name>.<date>.backup).\n  This cannot be undone.\n"
+  echo -e "\n  \e[1;36mmyTermux Cleaner (txclean)\e[0m"
+  echo -e "  This removes all myTermux timestamped backups (*.backup) and leftover installer caches."
+  echo -e "  \e[92mSafe:\e[0m Your .gitconfig, .ssh keys, shell history, and custom binaries are NEVER touched.\n"
 
   local confirm
   while :; do
     if [[ -n "$ZSH_VERSION" ]]; then
-      read "confirm?  Remove all myTermux backups? [y/N] "
+      read "confirm?  Remove all myTermux backups & cache? [y/N] "
     else
-      read -r -p "  Remove all myTermux backups? [y/N] " confirm
+      read -r -p "  Remove all myTermux backups & cache? [y/N] " confirm
     fi
 
     case "$confirm" in
@@ -250,6 +254,7 @@ txclean() {
   done
   echo -e "\n"
 
+  # 1. Dotfile backups
   for name in "${names[@]}"; do
     for item in "$HOME/${name}".*.backup; do
       [[ -e "$item" ]] || continue
@@ -260,10 +265,36 @@ txclean() {
     done
   done
 
+  # 2. Stray motd folder
+  if [[ -d "$HOME/motd" ]]; then
+    freed=$(( freed + $(du -sk "$HOME/motd" 2> /dev/null | awk '{print $1}') ))
+    rm -rf "$HOME/motd"
+    echo -e "    removed $HOME/motd"
+    count=$(( count + 1 ))
+  fi
+
+  # 3. Temporary update folders
+  for item in "$HOME"/myTermux.update.*; do
+    [[ -e "$item" ]] || continue
+    freed=$(( freed + $(du -sk "$item" 2> /dev/null | awk '{print $1}') ))
+    rm -rf "$item"
+    echo -e "    removed ${item}"
+    count=$(( count + 1 ))
+  done
+
+  # 4. Stray zsh dump cache
+  for item in "$HOME"/.zcompdump-*; do
+    [[ -e "$item" ]] || continue
+    freed=$(( freed + $(du -sk "$item" 2> /dev/null | awk '{print $1}') ))
+    rm -rf "$item"
+    echo -e "    removed ${item}"
+    count=$(( count + 1 ))
+  done
+
   if [[ $count -eq 0 ]]; then
-    echo -e "    Nothing to clean — no backups or logs found."
+    echo -e "    Nothing to clean — no backups or temporary files found."
   else
-    echo -e "\n    Removed ${count} item(s), freed ~$(( (freed + 1023) / 1024 )) MB.\n"
+    echo -e "\n    \e[92mClean complete!\e[0m Removed ${count} item(s), freed ~$(( (freed + 1023) / 1024 )) MB.\n"
   fi
 }
 
@@ -315,8 +346,8 @@ txhelp() {
   if [[ -d "$HOME/.scripts/toys" ]]; then
     echo -e "    pipes pipes1 pipes2 dna pacman rains spacey ghost jfetch"
   fi
-  if [[ -e "$HOME/.local/bin/ytdl" || -e "$HOME/.local/bin/gitssh" || -e "$HOME/.local/bin/ipconfig" || -e "$HOME/.scripts/js/repochecker.js" ]] || ls "$HOME/.local/bin"/macfinder* >/dev/null 2>&1; then
-    echo -e "    ytdl gitssh ipconfig macfinder repocek"
+  if [[ -e "$HOME/.local/bin/ytdlp" || -e "$HOME/.local/bin/gitssh" || -e "$HOME/.local/bin/ipconfig" || -e "$HOME/.scripts/js/repochecker.js" ]] || ls "$HOME/.local/bin"/macfinder* >/dev/null 2>&1; then
+    echo -e "    ytdlp (dlv/ytdl) gitssh ipconfig macfinder repocek"
   fi
 
   echo -e "\n  \e[1;33m  Everyday\e[0m"

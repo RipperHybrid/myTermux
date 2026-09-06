@@ -1,20 +1,19 @@
-if [[ $EUID -eq 0 ]]; then
-    USER_SYMBOL="%F{1}%f"
-else
-    USER_SYMBOL="%F{5}%f"
+# Simple bracketed zsh theme with user & git support
+
+if ! type mytermux_user >/dev/null 2>&1; then
+  function mytermux_user() {
+    local ufile="${HOME}/.config/mytermux/user.log"
+    if [[ -s "$ufile" ]]; then cat "$ufile"; else echo "${USER:-$(whoami 2>/dev/null || echo "user")}"; fi
+  }
 fi
 
-NUM_DIR=2
-DIR_PATH="%{$fg_bold[blue]%}   [ %{$fg[red]%}%$NUM_DIR~ %{$fg_bold[blue]%}]"
+PROMPT="%F{4}[ %F{5} $(mytermux_user)%F{4} ] [ %F{6} %2~%F{4} ] $(git_prompt_info)
+%(?.%F{2}❯%f.%F{1}❯%f) "
+RPROMPT='%(1j.%F{3} %f.)%(0?..%F{1} %f)%F{8}%T%f'
 
-BACKGROUND_JOBS="%(1j.%F{2}%f.)"
-NON_ZERO_RETURN_VALUE="%(0?..%F{1}%f)"
-
-RPROMPT='$BACKGROUND_JOBS $NON_ZERO_RETURN_VALUE $(git_prompt_info)'
-PROMPT='$DIR_PATH $USER_SYMBOL '
 zle_highlight=(default:bold)
 
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%} [ %{$fg[red]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%} ] %{$fg[yellow]%}✗"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%} ]"
+ZSH_THEME_GIT_PROMPT_PREFIX="%F{4}[ %F{1} %F{3}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%F{4} ]%f "
+ZSH_THEME_GIT_PROMPT_DIRTY="%F{1} ✗"
+ZSH_THEME_GIT_PROMPT_CLEAN="%F{2} ✔"

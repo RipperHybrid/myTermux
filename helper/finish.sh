@@ -10,16 +10,17 @@ function alertFinish() {
 
 function alertNotification() {
 
-  IMAGE_PATH="${HOME}/.config/mytermux/alert/images"
-  IMAGE_FILE_NAME="finish.png"
-
-  termux-notification --sound -t "myTermux v${MYTERMUX_VERSION} has been installed" --image-path ${IMAGE_PATH}/${IMAGE_FILE_NAME}
+  if command -v termux-notification >/dev/null 2>&1; then
+    termux-notification -t "myTermux v${MYTERMUX_VERSION} has been installed"
+  fi
 
 }
 
 function alertTorch() {
 
-  termux-toast -b "#A8D7FE" -c "#373E4D" -g middle "myTermux v${MYTERMUX_VERSION} has been installed"
+  if command -v termux-toast >/dev/null 2>&1; then
+    termux-toast -b "#A8D7FE" -c "#373E4D" -g middle "myTermux v${MYTERMUX_VERSION} has been installed"
+  fi
 
 }
 

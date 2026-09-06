@@ -20,13 +20,18 @@ function main() {
   banner
 
   packages
-  switchCase "Install" "Core Packages" \
-    "Essential development and file management tools bat, clang, neovim, and more." \
-    installPackages "" required
+  if [[ ${MISSING_COUNT:-0} -gt 0 || ${UPGRADE_COUNT:-0} -gt 0 ]]; then
+    switchCase "Install" "Core Packages" \
+      "Essential development and file management tools bat, clang, neovim, and more." \
+      installPackages "" required
+  else
+    echo ""
+    stat "RESULT" "Success" "All core packages are already installed and up-to-date. Skipping."
+  fi
 
   dotFiles
   switchCase "Install" "Dotfiles" \
-    "Pre-configured shell aliases, themes, fonts, and scripts with automatic backups." \
+    "Pre-configured shell aliases, themes, fonts, and scripts with optional backups." \
     installDotFilesWithBackup "" required
 
   switchCase "Install" "Music Player" \
@@ -38,8 +43,8 @@ function main() {
     "true" cleanupToys
 
   switchCase "Install" "Extra CLI Tools" \
-    "Productivity shortcuts for media downloading (ytdl), SSH keys, and network info." \
-    "true" cleanupExtraTools
+    "Productivity shortcuts for media downloading, SSH keys, and network info." \
+    installExtraTools cleanupExtraTools
 
   repositories
   switchCase "Clone" "Repositories" \
@@ -48,7 +53,7 @@ function main() {
 
   zshTheme
   switchCase "Install" "ZSH Themes" \
-    "12 prompt themes with git indicators, directory paths, and custom styling." \
+    "17 prompt themes with git indicators, directory paths, and custom styling." \
     installZshTheme
 
   switchCase "Install" "NvChad" \

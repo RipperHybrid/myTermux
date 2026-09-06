@@ -1,0 +1,392 @@
+#!/usr/bin/env bash
+# Universal Media Downloader (ytdlp / dlv / ytdl)
+# Supports YouTube, Instagram, Pinterest, TikTok, Twitter/X, Reddit, SoundCloud, and 1000+ sites.
+
+COLOR_RESET="\e[0m"
+COLOR_BASED="\e[39m"
+COLOR_DANGER="\e[91m"
+COLOR_WARNING="\e[93m"
+COLOR_SUCCESS="\e[92m"
+COLOR_INFO="\e[96m"
+COLOR_CYAN="\e[36m"
+COLOR_MUTED="\e[90m"
+
+APP_NAME="ytdlp"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Logging helpers
+function log_info() {
+  echo -e "[\e[96mINFO${COLOR_RESET}] > $1"
+}
+
+function log_success() {
+  echo -e "[\e[92mSUCCESS${COLOR_RESET}] > $1"
+}
+
+function log_warning() {
+  echo -e "[\e[93mWARNING${COLOR_RESET}] > $1"
+}
+
+function log_error() {
+  echo -e "[\e[91mERROR${COLOR_RESET}] > $1"
+}
+
+# Check dependencies
+function check_deps() {
+  local missing=()
+
+  if ! command -v yt-dlp >/dev/null 2>&1; then
+    if ! command -v youtube-dl >/dev/null 2>&1; then
+      missing+=("yt-dlp")
+    fi
+  fi
+
+  if ! command -v ffmpeg >/dev/null 2>&1; then
+    missing+=("ffmpeg")
+  fi
+
+  if ! command -v python >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+    missing+=("python")
+  fi
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log_warning "Missing required / recommended dependency: ${missing[*]}"
+    echo ""
+    read -p $'\e[93m[ASK]\e[0m > Automatically install missing packages (ffmpeg, python, yt-dlp, gallery-dl)? [Y/n]: ' inst_ans
+    case "$inst_ans" in
+      n | N | no | NO )
+        echo -e "\n${COLOR_INFO}You can manually install dependencies using:${COLOR_RESET}"
+        echo -e "  pkg install python ffmpeg -y && pip install -U yt-dlp gallery-dl\n"
+        if [[ " ${missing[*]} " =~ " yt-dlp " ]]; then
+          log_error "Cannot proceed without yt-dlp."
+          exit 1
+        fi
+        ;;
+      * )
+        log_info "Installing dependencies..."
+        if command -v pkg >/dev/null 2>&1; then
+          pkg install -y ffmpeg python
+        elif command -v apt-get >/dev/null 2>&1; then
+          sudo apt-get update -y && sudo apt-get install -y ffmpeg python3 python3-pip
+        elif command -v pacman >/dev/null 2>&1; then
+          sudo pacman -S --noconfirm ffmpeg python python-pip
+        fi
+
+        local pip_cmd="pip"
+        command -v pip3 >/dev/null 2>&1 && pip_cmd="pip3"
+        if command -v "$pip_cmd" >/dev/null 2>&1; then
+          "$pip_cmd" install --upgrade --no-cache-dir yt-dlp gallery-dl
+        fi
+
+        if ! command -v yt-dlp >/dev/null 2>&1 && ! command -v youtube-dl >/dev/null 2>&1; then
+          log_error "Failed to install yt-dlp. Please check network or install manually."
+          exit 1
+        fi
+        log_success "Dependencies installed successfully!"
+        echo ""
+        ;;
+    esac
+  fi
+}
+
+# Find cookies file if present
+function get_cookie_args() {
+  local cookie_paths=(
+    "$HOME/.config/yt-dlp/cookies.txt"
+    "$HOME/.yt-dlp/cookies.txt"
+    "$HOME/cookies.txt"
+    "$HOME/.cookies.txt"
+  )
+  for cp in "${cookie_paths[@]}"; do
+    if [[ -f "$cp" ]]; then
+      echo "--cookies $cp"
+      return
+    fi
+  done
+}
+
+# Print help
+function show_help() {
+  echo -e "
+${COLOR_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}
+  ${COLOR_INFO}Universal Media Downloader${COLOR_RESET} (${COLOR_WARNING}ytdlp${COLOR_RESET} / ${COLOR_WARNING}dlv${COLOR_RESET} / ${COLOR_WARNING}ytdl${COLOR_RESET})
+  Supports YouTube, Instagram, Pinterest, TikTok, X, Reddit, etc.
+${COLOR_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}
+
+${COLOR_WARNING}Usage:${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdlp${COLOR_RESET} <url>                   ${COLOR_MUTED}Smart auto-download (best video+audio mp4)${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdlp${COLOR_RESET} [mode] <url>            ${COLOR_MUTED}Download with specific format mode${COLOR_RESET}
+  ${COLOR_SUCCESS}dlv${COLOR_RESET}   <url>                   ${COLOR_MUTED}Universal media downloader shortcut${COLOR_RESET}
+  ${COLOR_SUCCESS}ytdl${COLOR_RESET}  <url>                   ${COLOR_MUTED}Legacy media downloader shortcut${COLOR_RESET}
+
+${COLOR_WARNING}Modes:${COLOR_RESET}
+  ${COLOR_SUCCESS}• best${COLOR_RESET}    <url>  ${COLOR_MUTED}> Best video + audio merged (mp4)${COLOR_RESET}
+  ${COLOR_SUCCESS}• mp4${COLOR_RESET}     <url>  ${COLOR_MUTED}> Universal MP4 video format${COLOR_RESET}
+  ${COLOR_SUCCESS}• mp3${COLOR_RESET}     <url>  ${COLOR_MUTED}> Extract high-quality MP3 audio (320k)${COLOR_RESET}
+  ${COLOR_SUCCESS}• audio${COLOR_RESET}   <url>  ${COLOR_MUTED}> Extract best quality audio (m4a/best)${COLOR_RESET}
+  ${COLOR_SUCCESS}• webm${COLOR_RESET}    <url>  ${COLOR_MUTED}> WebM video format${COLOR_RESET}
+  ${COLOR_SUCCESS}• thumb${COLOR_RESET}   <url>  ${COLOR_MUTED}> Download video / post thumbnail image${COLOR_RESET}
+  ${COLOR_SUCCESS}• format${COLOR_RESET}  <url>  ${COLOR_MUTED}> List available streams and select format code${COLOR_RESET}
+  ${COLOR_SUCCESS}• pin${COLOR_RESET}     <url>  ${COLOR_MUTED}> Download Pinterest pin / board (via gallery-dl)${COLOR_RESET}
+  ${COLOR_SUCCESS}• update${COLOR_RESET}         ${COLOR_MUTED}> Update yt-dlp & gallery-dl to latest version${COLOR_RESET}
+  ${COLOR_SUCCESS}• help${COLOR_RESET}           ${COLOR_MUTED}> Show this help message${COLOR_RESET}
+"
+}
+
+# Update extractors
+function update_tools() {
+  log_info "Updating yt-dlp and gallery-dl..."
+  if command -v pip >/dev/null 2>&1; then
+    pip install --upgrade --no-cache-dir yt-dlp gallery-dl
+  elif command -v yt-dlp >/dev/null 2>&1; then
+    yt-dlp -U
+  fi
+  log_success "Update complete!"
+}
+
+# Pinterest handler
+function download_pinterest() {
+  local url="$1"
+  if command -v gallery-dl >/dev/null 2>&1; then
+    log_info "Using gallery-dl for Pinterest media extraction..."
+    # -o directory=[] prevents creating nested gallery-dl/pinterest/ subdirectories
+    gallery-dl --directory . -o "directory=[]" "$url"
+  else
+    log_info "gallery-dl not found, attempting download via yt-dlp..."
+    log_warning "Tip: Run 'pip install gallery-dl' for full Pinterest multi-image/board support."
+    local bin="yt-dlp"
+    if ! command -v yt-dlp >/dev/null 2>&1 && command -v youtube-dl >/dev/null 2>&1; then
+      bin="youtube-dl"
+    fi
+    "$bin" --no-warnings --no-check-certificates "$url"
+  fi
+}
+
+# Prompt user to move downloaded file to Android Download directory if accessible
+function prompt_move_to_downloads() {
+  local marker="$1"
+  local target_dir="/storage/emulated/0/Download"
+  if [[ ! -d "$target_dir" && -d "/sdcard/Download" ]]; then
+    target_dir="/sdcard/Download"
+  elif [[ ! -d "$target_dir" && -d "$HOME/storage/shared/Download" ]]; then
+    target_dir="$HOME/storage/shared/Download"
+  fi
+
+  # Check if target download directory exists and has proper write permission
+  if [[ ! -d "$target_dir" || ! -w "$target_dir" ]]; then
+    return 0
+  fi
+
+  # If current working directory is already the target download directory, skip prompt
+  local cur_pwd
+  local tgt_pwd
+  cur_pwd="$(pwd -P 2>/dev/null || pwd)"
+  tgt_pwd="$(cd "$target_dir" 2>/dev/null && pwd -P)"
+  if [[ "$cur_pwd" == "$tgt_pwd" ]]; then
+    return 0
+  fi
+
+  echo ""
+  read -p $'\e[93m[ASK]\e[0m > Move downloaded file to /storage/emulated/0/Download? [y/N]: ' ans
+  case "$ans" in
+    y | Y | yes | YES )
+      local count=0
+      local find_cmd=()
+      if [[ -n "$marker" && -f "$marker" ]]; then
+        find_cmd=(find . -type f ! -name ".*" -newer "$marker")
+      else
+        find_cmd=(find . -type f ! -name ".*" -mmin -60)
+      fi
+
+      while IFS= read -r f; do
+        if [[ -f "$f" ]]; then
+          local base_f="$(basename "$f")"
+          # Move matching media and downloaded files
+          if [[ "$base_f" =~ \.(mp4|mkv|webm|mp3|m4a|opus|flac|wav|jpg|jpeg|png|webp|gif|zip|json)$ || ! "$base_f" =~ \.(sh|bash|zsh|lua|conf|txt|log|md)$ ]]; then
+            mv -f "$f" "$target_dir/$base_f" 2>/dev/null
+            if [[ -f "$target_dir/$base_f" ]]; then
+              log_success "Moved '$base_f' -> ${target_dir}/"
+              if command -v termux-media-scan >/dev/null 2>&1; then
+                termux-media-scan "$target_dir/$base_f" >/dev/null 2>&1
+              fi
+              ((count++))
+            fi
+          fi
+        fi
+      done < <("${find_cmd[@]}")
+
+      if [[ $count -eq 0 ]]; then
+        while IFS= read -r f; do
+          if [[ -f "$f" ]]; then
+            local base_f="$(basename "$f")"
+            mv -f "$f" "$target_dir/$base_f" 2>/dev/null
+            if [[ -f "$target_dir/$base_f" ]]; then
+              log_success "Moved '$base_f' -> ${target_dir}/"
+              if command -v termux-media-scan >/dev/null 2>&1; then
+                termux-media-scan "$target_dir/$base_f" >/dev/null 2>&1
+              fi
+              ((count++))
+            fi
+          fi
+        done < <(find . -type f ! -name ".*" -mmin -60)
+      fi
+
+      # Clean up any empty folders created during download (like ./gallery-dl)
+      find . -mindepth 1 -depth -type d -empty -delete 2>/dev/null
+      ;;
+    * )
+      log_info "File saved in current directory: $(pwd)"
+      ;;
+  esac
+}
+
+# Main download runner
+function run_download() {
+  local mode="$1"
+  local url="$2"
+
+  check_deps
+
+  local marker_file="${TMPDIR:-/tmp}/.ytdl_marker_$$"
+  touch "$marker_file" 2>/dev/null || marker_file=""
+  local status=0
+
+  # Detect Pinterest URLs
+  if [[ "$url" =~ pinterest\.com|pin\.it ]]; then
+    download_pinterest "$url"
+    status=$?
+  else
+    local bin="yt-dlp"
+    if ! command -v yt-dlp >/dev/null 2>&1 && command -v youtube-dl >/dev/null 2>&1; then
+      bin="youtube-dl"
+    fi
+
+    # Base flags for stability & anti-bot bypass
+    local base_opts=(
+      --no-check-certificates
+      --no-warnings
+      --ignore-errors
+      --embed-metadata
+      --extractor-args "youtube:player_client=android,web,ios"
+      -o "%(title).150B.%(ext)s"
+    )
+
+    # Add cookies if available
+    local cookie_arg
+    cookie_arg="$(get_cookie_args)"
+    if [[ -n "$cookie_arg" ]]; then
+      base_opts+=($cookie_arg)
+    fi
+
+    case "$mode" in
+      best)
+        log_info "Downloading in BEST quality (MP4)..."
+        "$bin" "${base_opts[@]}" -f "bestvideo*+bestaudio/best" --merge-output-format mp4 "$url"
+        status=$?
+        ;;
+
+      mp4)
+        log_info "Downloading MP4 video..."
+        "$bin" "${base_opts[@]}" -f "bestvideo*[ext=mp4]+bestaudio*[ext=m4a]/bestvideo*+bestaudio*/best[ext=mp4]/best" --merge-output-format mp4 "$url"
+        status=$?
+        ;;
+
+      webm)
+        log_info "Downloading WebM video..."
+        "$bin" "${base_opts[@]}" -f "bestvideo*[ext=webm]+bestaudio*[ext=webm]/bestvideo*+bestaudio*/best[ext=webm]/best" --merge-output-format webm "$url"
+        status=$?
+        ;;
+
+      mp3)
+        log_info "Extracting MP3 audio..."
+        "$bin" "${base_opts[@]}" -x --audio-format mp3 --audio-quality 0 "$url"
+        status=$?
+        ;;
+
+      audio)
+        log_info "Extracting audio (m4a/best)..."
+        "$bin" "${base_opts[@]}" -x --audio-format m4a --audio-quality 0 "$url"
+        status=$?
+        ;;
+
+      thumb|thumbnail)
+        log_info "Downloading thumbnail..."
+        "$bin" "${base_opts[@]}" --write-thumbnail --skip-download "$url"
+        status=$?
+        ;;
+
+      format|f)
+        log_info "Fetching available format list..."
+        "$bin" "${base_opts[@]}" -F "$url"
+        echo ""
+        read -p $'\e[93m[ASK]\e[0m > Enter format code to download (or press Enter for best): ' fcode
+        if [[ -z "$fcode" ]]; then
+          fcode="bestvideo*+bestaudio/best"
+        fi
+        log_info "Downloading format: $fcode..."
+        "$bin" "${base_opts[@]}" -f "$fcode" "$url"
+        status=$?
+        ;;
+
+      pin|pinterest)
+        download_pinterest "$url"
+        status=$?
+        ;;
+
+      *)
+        log_error "Unknown mode '$mode'"
+        show_help
+        [[ -n "$marker_file" && -f "$marker_file" ]] && rm -f "$marker_file"
+        exit 1
+        ;;
+    esac
+  fi
+
+  if [[ $status -eq 0 ]]; then
+    prompt_move_to_downloads "$marker_file"
+  fi
+
+  [[ -n "$marker_file" && -f "$marker_file" ]] && rm -f "$marker_file"
+  return $status
+}
+
+# Entry point parsing
+if [[ $# -eq 0 ]]; then
+  show_help
+  exit 0
+fi
+
+# Handle update command
+if [[ "$1" == "update" || "$1" == "--update" || "$1" == "-u" ]]; then
+  update_tools
+  exit 0
+fi
+
+# Handle help command
+if [[ "$1" == "help" || "$1" == "--help" || "$1" == "-h" ]]; then
+  show_help
+  exit 0
+fi
+
+# Direct URL passed without mode: ytdlp "https://..."
+if [[ "$1" =~ ^https?:// || "$1" =~ ^www\. || "$1" =~ ^[a-zA-Z0-9_-]+\.[a-zA-Z]{2,} ]]; then
+  run_download "best" "$1"
+  exit $?
+fi
+
+# Mode passed: ytdlp <mode> <url>
+if [[ -n "$1" && -n "$2" ]]; then
+  run_download "$1" "$2"
+  exit $?
+fi
+
+# Only mode passed without url
+if [[ -n "$1" && -z "$2" ]]; then
+  read -p $'\e[93m[ASK]\e[0m > Enter media URL: ' target_url
+  if [[ -n "$target_url" ]]; then
+    run_download "$1" "$target_url"
+  else
+    log_error "No URL provided."
+    exit 1
+  fi
+fi

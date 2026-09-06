@@ -7,10 +7,9 @@ function utility() {
   chsh -s zsh
 
   if [[ -f $PREFIX/etc/motd ]]; then
-    
-    mkdir $HOME/motd/
-    mv $PREFIX/etc/motd $HOME/motd/motd.backup
-
+    mkdir -p "$HOME/.config/mytermux"
+    mv "$PREFIX/etc/motd" "$HOME/.config/mytermux/motd.backup" 2>/dev/null
+    rm -rf "$HOME/motd" 2>/dev/null
   fi
 
 }

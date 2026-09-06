@@ -33,6 +33,8 @@ MYTERMUX_USER_FILE="${HOME}/.config/mytermux/user.log"
 function mytermux_user() {
   if [[ -s "${MYTERMUX_USER_FILE}" ]]; then
     cat "${MYTERMUX_USER_FILE}"
+  else
+    echo "${USER:-$(whoami 2>/dev/null || echo "user")}"
   fi
 }
 

@@ -48,13 +48,13 @@ export COLUMNS LINES
 
 - 🎨 **Colorscheme Manager** — switch between terminal color themes live with `chcolor`
 - 🔤 **Font Manager** — `chfont` lists fonts in `~/.fonts` and previews them live before applying; answering `n` or pressing `Ctrl+C` restores your previous font automatically
-- 💻 **ZSH Theme Manager** — live switcher (`chzsh`) for 12 custom prompt styles (ma, powerline, pure, status, etc.)
+- 💻 **ZSH Theme Manager** — live switcher (`chzsh`) for 17 custom prompt styles (cyberpunk, catppuccin, tokyonight, dracula, nord, ma, powerline, pure, status, etc.)
 - ✏️ **Custom Prompt Username** — `setuser [name]` sets a custom display name in prompt themes in place of `user@host`
 - ⚡ **Dynamic Fetch Display** — automatically starts with your preferred fetch screen (`neo` / `rxfetch`), remembered each time you run either
 - 🔎 **Interactive Missing-Command Installer** — typing an unknown command provides an interactive menu of matching packages with instant installation
 - 🕐 **History Management** — toggle history recording with `histoff` / `histon`
 - 🔮 **Fish-Style Autosuggestions** — fast inline suggestions as you type; accept with `→` or `Ctrl+F`
-- 📺 **Media Downloader** — `ytdl` CLI wrapper for `yt-dlp` (`ytdl best|mp4|webm|mp3|audio|format <link>`)
+- 📺 **Universal Media Downloader** — `ytdlp` (`dlv` / `ytdl`) smart wrapper supporting YouTube, Pinterest, Instagram, TikTok, Twitter/X, Reddit, etc. (`ytdlp <url>` or `dlv best|mp4|webm|mp3|audio|format <link>`)
 - 📊 **System Diagnostics** — `fetch`, `disk`, and `battery` for storage, power, and hardware info
 - 🛠️ **Management Commands** — `txhelp` (command list), `txupdate` (in-place updater), `txclean` (backup cleaner), `txuninstall` (complete remover)
 
@@ -118,7 +118,7 @@ See full screenshots, animations, font previews, and colorschemes in **[screensh
 ### 🛠️ CLI Tools, Network & Media
 | Command | Description |
 | :--- | :--- |
-| `ytdl <mode> <url>` | Media downloader (`best`, `mp4`, `webm`, `mp3`, `audio`, `format`) |
+| `ytdlp` / `dlv` / `ytdl <url>` | Universal media downloader for YouTube, Pinterest, Instagram, TikTok, etc. (`best`, `mp4`, `mp3`, `audio`, `webm`, `format`, `pin`) |
 | `gitssh` | Generate SSH key and configure Git authentication |
 | `ipconfig` | Quick network interfaces and IP address info |
 | `macfinder [mac]` | Search and identify MAC address vendor details |
