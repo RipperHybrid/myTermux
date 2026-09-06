@@ -20,9 +20,14 @@ function main() {
   banner
 
   packages
-  switchCase "Install" "Core Packages" \
-    "Essential development and file management tools bat, clang, neovim, and more." \
-    installPackages "" required
+  if [[ ${MISSING_COUNT:-0} -gt 0 || ${UPGRADE_COUNT:-0} -gt 0 ]]; then
+    switchCase "Install" "Core Packages" \
+      "Essential development and file management tools bat, clang, neovim, and more." \
+      installPackages "" required
+  else
+    echo ""
+    stat "RESULT" "Success" "All core packages are already installed and up-to-date. Skipping."
+  fi
 
   dotFiles
   switchCase "Install" "Dotfiles" \
