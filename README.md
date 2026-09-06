@@ -54,7 +54,7 @@ export COLUMNS LINES
 - 🔎 **Interactive Missing-Command Installer** — typing an unknown command provides an interactive menu of matching packages with instant installation
 - 🕐 **History Management** — toggle history recording with `histoff` / `histon`
 - 🔮 **Fish-Style Autosuggestions** — fast inline suggestions as you type; accept with `→` or `Ctrl+F`
-- 📺 **Media Downloader** — `ytdl` CLI wrapper for `yt-dlp` (`ytdl best|mp4|webm|mp3|audio|format <link>`)
+- 📺 **Universal Media Downloader** — `ytdl` / `dlv` smart wrapper supporting YouTube, Pinterest, Instagram, TikTok, Twitter/X, Reddit, etc. (`ytdl <url>` or `ytdl best|mp4|webm|mp3|audio|format <link>`)
 - 📊 **System Diagnostics** — `fetch`, `disk`, and `battery` for storage, power, and hardware info
 - 🛠️ **Management Commands** — `txhelp` (command list), `txupdate` (in-place updater), `txclean` (backup cleaner), `txuninstall` (complete remover)
 
@@ -118,7 +118,7 @@ See full screenshots, animations, font previews, and colorschemes in **[screensh
 ### 🛠️ CLI Tools, Network & Media
 | Command | Description |
 | :--- | :--- |
-| `ytdl <mode> <url>` | Media downloader (`best`, `mp4`, `webm`, `mp3`, `audio`, `format`) |
+| `ytdl` / `dlv <mode> <url>` | Universal media downloader for YouTube, Pinterest, Instagram, TikTok, etc. (`best`, `mp4`, `mp3`, `audio`, `webm`, `format`, `pin`) |
 | `gitssh` | Generate SSH key and configure Git authentication |
 | `ipconfig` | Quick network interfaces and IP address info |
 | `macfinder [mac]` | Search and identify MAC address vendor details |

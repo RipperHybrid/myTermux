@@ -164,3 +164,24 @@ function installMusic() {
 
   setCursor on
 }
+
+function installExtraTools() {
+  setCursor off
+
+  echo ""
+
+  for PACKAGE in ffmpeg python nodejs; do
+    installOrUpgradePackage "${PACKAGE}"
+  done
+
+  if command -v pip >/dev/null 2>&1 || command -v pip3 >/dev/null 2>&1; then
+    local PIP_BIN="pip"
+    command -v pip3 >/dev/null 2>&1 && PIP_BIN="pip3"
+
+    start_animation "    Installing ${COLOR_WARNING}'${COLOR_SUCCESS}yt-dlp & gallery-dl${COLOR_WARNING}'${COLOR_BASED} ..."
+    $PIP_BIN install --upgrade --no-cache-dir yt-dlp gallery-dl &> /dev/null
+    stop_animation $?
+  fi
+
+  setCursor on
+}

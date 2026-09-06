@@ -125,7 +125,7 @@ function installDotFiles() {
 
   done
 
-  chmod +x "${HOME}/.local/bin/mytermux-update" 2> /dev/null
+  chmod +x "${HOME}/.local/bin/"* 2> /dev/null
 
   setCursor on
 
