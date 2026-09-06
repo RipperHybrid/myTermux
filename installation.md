@@ -54,7 +54,7 @@ The installer walks through the following steps. For every prompt: type `y` to i
 | # | Prompt | Required? | `y` (accept) | `n` (skip) |
 |---|--------|-----------|---------------|------------|
 | 1 | **Core Packages** | ✅ required | Installs `bat clang curl eza fzf git neofetch neovim openssh termux-api tmux zsh` — packages already installed and up to date are skipped, only missing or outdated ones are installed | ⚠️ warns it's required, second `n` aborts |
-| 2 | **Dotfiles** | ✅ required | Backs up your current files, then copies the custom configs (`.aliases`, `.zshrc`, `.autostart`, `.config`, `.colorscheme`, `.fonts`, `.local`, `.scripts`, `.termux`, `.tmux.conf`) into `$HOME` | ⚠️ warns it's required, second `n` aborts |
+| 2 | **Dotfiles** | ✅ required | Prompts whether to backup existing dotfiles, then safely copies/merges the custom configs (`.aliases`, `.zshrc`, `.autostart`, `.config`, `.colorscheme`, `.fonts`, `.local`, `.scripts`, `.termux`, `.tmux.conf`) into `$HOME` without touching your personal `.gitconfig`, `.ssh` keys, or custom binaries | ⚠️ warns it's required, second `n` aborts |
 | 3 | **Music Player** | optional | Installs `mpd` and `mpc` for background terminal audio | Purges the music aliases, mpd/ncmpcpp configs and `~/.local/bin/music` that the Dotfiles step placed |
 | 4 | **Terminal Color Toys** | optional | Keeps the toys shipped with the dotfiles (`~/.scripts/toys`: pipes, pacman, rain, ...) | Removes `~/.scripts/toys` and its alias section |
 | 5 | **Extra CLI Tools** | optional | Installs `ffmpeg`, `python`, `nodejs`, `yt-dlp`, and `gallery-dl` for the `ytdlp` (`dlv`/`ytdl`) media downloader, plus keeps `gitssh`, `ipconfig`, `macfinder`, and the JS repo checker | Removes them plus the `repocek` / `convi` / `dlv` / `ytdl` aliases |
@@ -69,16 +69,16 @@ Anything that isn't `y` or `n` — including a bare `Enter` — re-asks the same
 
 ### What happens to your existing dotfiles?
 
-Right after you answer `y` to the **Dotfiles** step, the installer automatically moves any existing copy of those files/folders out of the way:
-
-```text
-~/.aliases        -> ~/.aliases.2026.09.04-10.30.00.backup
-~/.zshrc          -> ~/.zshrc.2026.09.04-10.30.00.backup
-~/.config         -> ~/.config.2026.09.04-10.30.00.backup
-... (and the rest)
-```
-
-The backup only happens when you accept the step, so declining (which aborts, since Dotfiles is required) never touches your existing files. To go back to your old setup after an install, restore the backups (`mv ~/.aliases.2026.*.backup ~/.aliases`, etc.) or run the uninstaller.
+During the **Dotfiles** step, the installer asks if you want to create a backup (`[y/N]`):
+- **If you answer `y`**: Previous `.backup` files are cleaned first so they don't multiply on every run, and a fresh non-destructive copy (`cp -R`) is created in `$HOME`:
+  ```text
+  ~/.aliases        -> ~/.aliases.2026.09.04-10.30.00.backup
+  ~/.zshrc          -> ~/.zshrc.2026.09.04-10.30.00.backup
+  ~/.config         -> ~/.config.2026.09.04-10.30.00.backup
+  ... (and the rest)
+  ```
+- **If you answer `n`**: Backup creation is skipped and dotfiles are safely merged in-place.
+- **Safe by design**: Your `.gitconfig`, `.ssh/` keys, shell history, and custom user binaries in `~/.local/bin/` are **never** overwritten, moved, or deleted. You can clean all backups and temporary installer cache anytime using the `txclean` command.
 
 ## 6. Restart Termux
 
@@ -103,7 +103,7 @@ txupdate          # same as: mytermux-update
 `mytermux-update` is installed to `~/.local/bin` by the Dotfiles step (it's on your `PATH` via `~/.zshrc`), so it survives the installer's folder cleanup and stays available for every later release. It re-clones the latest release into `~/myTermux` and runs the installer exactly as on a fresh install:
 
 - every step is re-prompted (`y`/`n`) — packages that are already installed and up to date are skipped automatically,
-- the Dotfiles step first moves your current dotfiles (`~/.aliases`, `~/.zshrc`, `~/.termux`, `~/.local`, ...) into `~.<name>.<timestamp>.backup` copies, then applies the new files — pull anything you hand-edited (like `default-working-directory`) back out of those backups,
+- the Dotfiles step gives you the option to backup existing files (cleaning any old backups first) and safely merges the new files in-place without touching your `.gitconfig`, `.ssh`, or custom binaries,
 - when it finishes it asks to delete the freshly cloned `~/myTermux` again and requires a second `y` confirmation before deletion.
 
 Manual route (same result):

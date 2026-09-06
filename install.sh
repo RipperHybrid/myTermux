@@ -26,7 +26,7 @@ function main() {
 
   dotFiles
   switchCase "Install" "Dotfiles" \
-    "Pre-configured shell aliases, themes, fonts, and scripts with automatic backups." \
+    "Pre-configured shell aliases, themes, fonts, and scripts with optional backups." \
     installDotFilesWithBackup "" required
 
   switchCase "Install" "Music Player" \
