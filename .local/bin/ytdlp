@@ -164,7 +164,6 @@ function download_pinterest() {
 
 # Prompt user to move downloaded file to Android Download directory if accessible
 function prompt_move_to_downloads() {
-  local marker="$1"
   local target_dir="/storage/emulated/0/Download"
   if [[ ! -d "$target_dir" && -d "/sdcard/Download" ]]; then
     target_dir="/sdcard/Download"
@@ -208,7 +207,15 @@ function prompt_move_to_downloads() {
         dest="${target_dir}/${base_f}"
         if [[ -e "$dest" ]]; then
           log_warning "Skipped '$base_f' — a file with that name already exists in ${target_dir}/"
-          ((skipped++))
+          skipped=$((skipped + 1))
+          continue
+        fi
+
+        # Skip self-move when target dir resolves to cwd via symlink
+        local src_id dest_id
+        src_id="$(stat -c '%d:%i' "$f" 2>/dev/null)"
+        dest_id="$(stat -c '%d:%i' "$dest" 2>/dev/null)"
+        if [[ -n "$src_id" && "$src_id" == "$dest_id" ]]; then
           continue
         fi
 
@@ -218,7 +225,7 @@ function prompt_move_to_downloads() {
           if command -v termux-media-scan >/dev/null 2>&1; then
             termux-media-scan "$dest" >/dev/null 2>&1
           fi
-          ((count++))
+          count=$((count + 1))
         fi
       done
 
@@ -335,7 +342,7 @@ function run_download() {
   fi
 
   if [[ $status -eq 0 ]]; then
-    prompt_move_to_downloads "$marker_file"
+    prompt_move_to_downloads
   fi
 
   [[ -n "$marker_file" && -f "$marker_file" ]] && rm -f "$marker_file"
