@@ -190,49 +190,41 @@ function prompt_move_to_downloads() {
   read -p $'\e[93m[ASK]\e[0m > Move downloaded file to /storage/emulated/0/Download? [y/N]: ' ans
   case "$ans" in
     y | Y | yes | YES )
+      # Move only new media files from the current directory to Downloads (no recursion, no deletions)
       local count=0
-      local find_cmd=()
-      if [[ -n "$marker" && -f "$marker" ]]; then
-        find_cmd=(find . -type f ! -name ".*" -newer "$marker")
-      else
-        find_cmd=(find . -type f ! -name ".*" -mmin -60)
-      fi
+      local skipped=0
+      local f base_f dest
 
-      while IFS= read -r f; do
-        if [[ -f "$f" ]]; then
-          local base_f="$(basename "$f")"
-          # Move matching media and downloaded files
-          if [[ "$base_f" =~ \.(mp4|mkv|webm|mp3|m4a|opus|flac|wav|jpg|jpeg|png|webp|gif|zip|json)$ || ! "$base_f" =~ \.(sh|bash|zsh|lua|conf|txt|log|md)$ ]]; then
-            mv -f "$f" "$target_dir/$base_f" 2>/dev/null
-            if [[ -f "$target_dir/$base_f" ]]; then
-              log_success "Moved '$base_f' -> ${target_dir}/"
-              if command -v termux-media-scan >/dev/null 2>&1; then
-                termux-media-scan "$target_dir/$base_f" >/dev/null 2>&1
-              fi
-              ((count++))
-            fi
-          fi
+      for f in ./*; do
+        [[ -f "$f" ]] || continue
+        base_f="$(basename "$f")"
+        [[ "$base_f" == ".*" ]] && continue
+
+        # Only move real media/archive files this tool could have produced.
+        if [[ ! "$base_f" =~ \.(mp4|mkv|webm|mp3|m4a|opus|flac|wav|jpg|jpeg|png|webp|gif|zip|json)$ ]]; then
+          continue
         fi
-      done < <("${find_cmd[@]}")
 
-      if [[ $count -eq 0 ]]; then
-        while IFS= read -r f; do
-          if [[ -f "$f" ]]; then
-            local base_f="$(basename "$f")"
-            mv -f "$f" "$target_dir/$base_f" 2>/dev/null
-            if [[ -f "$target_dir/$base_f" ]]; then
-              log_success "Moved '$base_f' -> ${target_dir}/"
-              if command -v termux-media-scan >/dev/null 2>&1; then
-                termux-media-scan "$target_dir/$base_f" >/dev/null 2>&1
-              fi
-              ((count++))
-            fi
+        dest="${target_dir}/${base_f}"
+        if [[ -e "$dest" ]]; then
+          log_warning "Skipped '$base_f' — a file with that name already exists in ${target_dir}/"
+          ((skipped++))
+          continue
+        fi
+
+        mv -f "$f" "$dest" 2>/dev/null
+        if [[ -f "$dest" ]]; then
+          log_success "Moved '$base_f' -> ${target_dir}/"
+          if command -v termux-media-scan >/dev/null 2>&1; then
+            termux-media-scan "$dest" >/dev/null 2>&1
           fi
-        done < <(find . -type f ! -name ".*" -mmin -60)
-      fi
+          ((count++))
+        fi
+      done
 
-      # Clean up any empty folders created during download (like ./gallery-dl)
-      find . -mindepth 1 -depth -type d -empty -delete 2>/dev/null
+      if [[ $count -eq 0 && $skipped -eq 0 ]]; then
+        log_info "No new media files found to move."
+      fi
       ;;
     * )
       log_info "File saved in current directory: $(pwd)"
